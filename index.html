@@ -8,7 +8,7 @@
   />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
-  <title>Dead Horizon 3D - 4000x4000 Survival RPG</title>
+  <title>Rust Horizon 3D - Realistic Survival RPG</title>
 
   <script type="importmap">
     {
@@ -33,7 +33,7 @@
       width: 100%;
       height: 100%;
       overflow: hidden;
-      background: #080a0c;
+      background: #090b0d;
       font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
       color: #f1f5f9;
     }
@@ -44,6 +44,17 @@
       z-index: 1;
     }
 
+    /* Subtle Blood Vignette on Damage */
+    #damage-vignette {
+      position: fixed;
+      inset: 0;
+      z-index: 5;
+      pointer-events: none;
+      background: radial-gradient(circle, transparent 55%, rgba(185, 28, 28, 0.65) 100%);
+      opacity: 0;
+      transition: opacity 0.2s ease-out;
+    }
+
     #hud {
       position: fixed;
       inset: 0;
@@ -51,87 +62,93 @@
       pointer-events: none;
     }
 
-    /* Top Left: Survival Bars & Map Info */
-    #status-panel {
+    /* Rust-Style Bottom-Left Survival Bars */
+    #rust-vitals {
       position: absolute;
-      top: 8px;
-      left: 10px;
-      background: rgba(10, 14, 18, 0.72);
-      border-left: 3px solid #ef4444;
-      padding: 6px 10px;
-      border-radius: 6px;
-      font-size: 11px;
+      bottom: 8px;
+      left: 8px;
+      width: 156px;
+      background: rgba(14, 17, 20, 0.84);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 5px;
+      padding: 5px 7px;
       display: flex;
       flex-direction: column;
       gap: 4px;
-      min-width: 175px;
+      z-index: 15;
     }
 
-    .bar-row {
+    .vital-row {
       display: flex;
       align-items: center;
-      gap: 6px;
-      font-weight: 700;
+      gap: 5px;
+      font-size: 10px;
+      font-weight: 800;
     }
 
-    .bar-track {
+    .vital-bar {
       flex: 1;
-      height: 7px;
-      background: rgba(255, 255, 255, 0.15);
-      border-radius: 4px;
+      height: 8px;
+      background: rgba(255, 255, 255, 0.12);
+      border-radius: 3px;
       overflow: hidden;
     }
 
-    .bar-fill {
+    .vital-fill {
       height: 100%;
       width: 100%;
       transition: width 0.15s ease;
     }
 
-    #hp-fill { background: #ef4444; }
-    #hunger-fill { background: #f59e0b; }
-    #thirst-fill { background: #38bdf8; }
+    #hp-fill { background: #65a30d; }
+    #thirst-fill { background: #0284c7; }
+    #hunger-fill { background: #d97706; }
+    #armor-fill { background: #94a3b8; }
 
-    #map-info {
-      color: #94a3b8;
+    /* Top Left Compass & Zone Telemetry */
+    #top-telemetry {
+      position: absolute;
+      top: 8px;
+      left: 10px;
+      background: rgba(12, 15, 18, 0.76);
+      border-left: 3px solid #ea580c;
+      padding: 5px 9px;
+      border-radius: 4px;
       font-size: 10px;
-      font-weight: 700;
-      margin-top: 2px;
-    }
-
-    #zone-label {
-      color: #34d399;
       font-weight: 800;
+      line-height: 1.35;
     }
 
-    /* Boss Health Bar (Top Center) */
+    #zone-label { color: #84cc16; font-size: 11px; }
+    #coord-label { color: #cbd5e1; }
+
+    /* Boss Health Bar */
     #boss-bar-wrap {
       position: absolute;
       top: 8px;
       left: 50%;
       transform: translateX(-50%);
-      width: 280px;
-      background: rgba(20, 8, 12, 0.85);
-      border: 1px solid #ef4444;
-      border-radius: 8px;
+      width: 270px;
+      background: rgba(24, 8, 10, 0.88);
+      border: 1.5px solid #dc2626;
+      border-radius: 6px;
       padding: 5px 10px;
       display: none;
       text-align: center;
-      box-shadow: 0 0 15px rgba(239, 68, 68, 0.45);
+      box-shadow: 0 0 16px rgba(220, 38, 38, 0.5);
     }
 
     #boss-name {
       font-size: 11px;
       font-weight: 900;
-      color: #fca5a5;
-      letter-spacing: 0.5px;
+      color: #fecaca;
       margin-bottom: 3px;
     }
 
     #boss-hp-track {
       width: 100%;
       height: 8px;
-      background: #271014;
+      background: #2b0d10;
       border-radius: 4px;
       overflow: hidden;
     }
@@ -139,10 +156,10 @@
     #boss-hp-fill {
       height: 100%;
       width: 100%;
-      background: linear-gradient(90deg, #dc2626, #f97316);
+      background: linear-gradient(90deg, #b91c1c, #ea580c);
     }
 
-    /* Top Right Buttons */
+    /* Top Right Controls */
     #top-right-controls {
       position: absolute;
       top: 8px;
@@ -153,7 +170,7 @@
     }
 
     .top-btn {
-      background: rgba(15, 23, 30, 0.82);
+      background: rgba(18, 22, 27, 0.86);
       color: #f8fafc;
       border: 1px solid rgba(255, 255, 255, 0.25);
       border-radius: 6px;
@@ -163,53 +180,48 @@
     }
 
     .top-btn:active, .top-btn.active {
-      background: #dc2626;
+      background: #ea580c;
       border-color: #fff;
     }
 
     #btn-open-bag {
-      background: rgba(217, 119, 6, 0.88);
-      border-color: #fbbf24;
+      background: linear-gradient(135deg, #b45309, #d97706);
+      border-color: #fde047;
     }
 
-    /* Crosshair & Interaction Prompt */
+    /* Dynamic Crosshair & Hit Marker */
     #crosshair {
       position: absolute;
       top: 50%;
       left: 50%;
-      width: 10px;
-      height: 10px;
+      width: 12px;
+      height: 12px;
       transform: translate(-50%, -50%);
-      border: 2px solid rgba(255, 255, 255, 0.9);
+      border: 2px solid rgba(255, 255, 255, 0.88);
       border-radius: 50%;
       box-shadow: 0 0 4px #000;
+      transition: transform 0.08s ease, border-color 0.08s ease;
     }
 
-    #crosshair.highlight {
-      border-color: #fbbf24;
-      transform: translate(-50%, -50%) scale(1.4);
+    #crosshair.hit {
+      border-color: #ef4444;
+      transform: translate(-50%, -50%) scale(1.65);
     }
 
-    #ammo-hud {
-      position: absolute;
-      bottom: 68px;
-      right: 165px;
-      background: rgba(10, 14, 18, 0.72);
-      padding: 4px 10px;
-      border-radius: 6px;
-      font-size: 12px;
-      font-weight: 800;
-      color: #fde047;
-      display: none;
+    #crosshair.ads {
+      width: 5px;
+      height: 5px;
+      background: #ef4444;
+      border-color: #ef4444;
     }
 
     #target-prompt {
       position: absolute;
-      top: calc(50% + 16px);
+      top: calc(50% + 18px);
       left: 50%;
       transform: translateX(-50%);
-      background: rgba(10, 14, 18, 0.85);
-      border: 1px solid rgba(251, 191, 36, 0.5);
+      background: rgba(12, 15, 18, 0.88);
+      border: 1px solid rgba(250, 204, 21, 0.55);
       color: #fef08a;
       padding: 4px 12px;
       border-radius: 12px;
@@ -219,10 +231,25 @@
       white-space: nowrap;
     }
 
+    #held-info-banner {
+      position: absolute;
+      bottom: 62px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(12, 15, 18, 0.78);
+      padding: 3px 12px;
+      border-radius: 10px;
+      font-size: 11px;
+      font-weight: 800;
+      color: #e2e8f0;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      white-space: nowrap;
+    }
+
     /* Toast Notifications */
     #toast-box {
       position: absolute;
-      top: 52px;
+      top: 48px;
       left: 50%;
       transform: translateX(-50%);
       display: flex;
@@ -232,14 +259,14 @@
     }
 
     .toast {
-      background: rgba(15, 23, 20, 0.88);
-      border: 1px solid #34d399;
-      color: #6ee7b7;
-      padding: 3px 10px;
+      background: rgba(14, 20, 18, 0.9);
+      border: 1px solid #84cc16;
+      color: #bef264;
+      padding: 3px 11px;
       border-radius: 10px;
       font-size: 11px;
       font-weight: 800;
-      animation: fadeUp 1.1s ease-out forwards;
+      animation: fadeUp 1.15s ease-out forwards;
     }
 
     @keyframes fadeUp {
@@ -247,7 +274,7 @@
       100% { opacity: 0; transform: translateY(-18px); }
     }
 
-    /* 8-Slot Bottom Hotbar (Item Baridag Bar) */
+    /* Rust 6-Slot / 8-Slot Bottom Hotbar */
     #hotbar {
       position: absolute;
       bottom: 8px;
@@ -255,41 +282,42 @@
       transform: translateX(-50%);
       display: flex;
       gap: 4px;
-      background: rgba(10, 14, 18, 0.78);
+      background: rgba(14, 17, 20, 0.85);
       padding: 4px;
-      border-radius: 8px;
-      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 7px;
+      border: 1px solid rgba(255, 255, 255, 0.22);
       pointer-events: auto;
+      z-index: 15;
     }
 
     .hotbar-slot {
       width: 44px;
       height: 46px;
-      background: rgba(30, 41, 59, 0.75);
-      border: 1.5px solid rgba(255, 255, 255, 0.2);
-      border-radius: 6px;
+      background: rgba(30, 36, 44, 0.82);
+      border: 1.5px solid rgba(255, 255, 255, 0.18);
+      border-radius: 5px;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       position: relative;
-      font-size: 16px;
+      font-size: 17px;
     }
 
     .hotbar-slot.selected {
-      border-color: #fbbf24;
-      background: rgba(245, 158, 11, 0.28);
+      border-color: #38bdf8;
+      background: rgba(2, 132, 199, 0.35);
       transform: translateY(-2px);
     }
 
     .slot-name {
       font-size: 8px;
-      font-weight: 700;
+      font-weight: 800;
       max-width: 40px;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
-      color: #e2e8f0;
+      color: #f1f5f9;
     }
 
     .slot-qty {
@@ -301,25 +329,25 @@
       color: #fde047;
     }
 
-    /* Left Joystick */
+    /* Left Joystick Zone */
     #joystick-zone {
       position: absolute;
       left: 0;
-      bottom: 0;
+      top: 48px;
+      bottom: 92px;
       width: 34%;
-      height: 72%;
       pointer-events: auto;
     }
 
     #joystick-base {
       position: absolute;
       left: 26px;
-      bottom: 28px;
-      width: 102px;
-      height: 102px;
+      bottom: 14px;
+      width: 100px;
+      height: 100px;
       border-radius: 50%;
       background: rgba(255, 255, 255, 0.08);
-      border: 2px solid rgba(255, 255, 255, 0.24);
+      border: 2px solid rgba(255, 255, 255, 0.25);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -329,11 +357,11 @@
       width: 42px;
       height: 42px;
       border-radius: 50%;
-      background: rgba(241, 245, 249, 0.6);
+      background: rgba(241, 245, 249, 0.65);
       border: 2px solid #fff;
     }
 
-    /* Right Camera Look Area */
+    /* Right Camera Look Zone */
     #look-zone {
       position: absolute;
       right: 0;
@@ -343,48 +371,53 @@
       pointer-events: auto;
     }
 
-    /* Right Action Buttons */
+    /* Right Thumb Action Pad */
     #action-pad {
       position: absolute;
-      right: 14px;
-      bottom: 14px;
+      right: 12px;
+      bottom: 12px;
       display: grid;
-      grid-template-columns: repeat(2, 58px);
-      gap: 8px;
+      grid-template-columns: repeat(3, 54px);
+      gap: 7px;
       pointer-events: none;
+      z-index: 15;
     }
 
     .act-btn {
       pointer-events: auto;
-      width: 58px;
-      height: 58px;
+      width: 54px;
+      height: 54px;
       border-radius: 50%;
-      background: rgba(15, 23, 30, 0.72);
-      border: 2px solid rgba(255, 255, 255, 0.3);
+      background: rgba(16, 20, 25, 0.78);
+      border: 2px solid rgba(255, 255, 255, 0.28);
       color: #fff;
-      font-size: 10px;
+      font-size: 9.5px;
       font-weight: 800;
       display: flex;
       align-items: center;
       justify-content: center;
       text-align: center;
+      line-height: 1.15;
     }
 
     .act-btn:active, .act-btn.active {
-      background: #ef4444;
+      background: #ea580c;
       border-color: #fff;
-      transform: scale(0.93);
+      transform: scale(0.92);
     }
 
     #btn-use {
-      background: rgba(220, 38, 38, 0.85);
+      width: 62px;
+      height: 62px;
+      background: rgba(220, 38, 38, 0.88);
       border-color: #fca5a5;
-      font-size: 11px;
+      font-size: 10.5px;
+      box-shadow: 0 0 12px rgba(220, 38, 38, 0.5);
     }
 
     #btn-loot {
-      background: rgba(16, 185, 129, 0.82);
-      border-color: #6ee7b7;
+      background: rgba(217, 119, 6, 0.88);
+      border-color: #fde047;
     }
 
     /* ==========================================
@@ -395,22 +428,20 @@
       position: fixed;
       inset: 0;
       z-index: 50;
-      background: rgba(6, 9, 13, 0.92);
+      background: rgba(8, 11, 15, 0.94);
       pointer-events: auto;
       padding: 10px;
       flex-direction: column;
     }
 
-    #modal-overlay.open {
-      display: flex;
-    }
+    #modal-overlay.open { display: flex; }
 
     .modal-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.15);
-      padding-bottom: 8px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.16);
+      padding-bottom: 7px;
       margin-bottom: 8px;
     }
 
@@ -423,16 +454,16 @@
       background: #1e293b;
       color: #cbd5e1;
       border: 1px solid #334155;
-      padding: 6px 12px;
+      padding: 6px 11px;
       border-radius: 6px;
-      font-size: 12px;
+      font-size: 11px;
       font-weight: 800;
     }
 
     .tab-btn.active {
       background: #d97706;
       color: #fff;
-      border-color: #fbbf24;
+      border-color: #fde047;
     }
 
     #btn-close-modal {
@@ -452,11 +483,8 @@
       padding-right: 4px;
     }
 
-    .modal-body * {
-      touch-action: pan-y;
-    }
+    .modal-body * { touch-action: pan-y; }
 
-    /* Filter Bar for 520 Crafts */
     .filter-bar {
       display: flex;
       flex-wrap: wrap;
@@ -471,7 +499,7 @@
       padding: 5px 10px;
       border-radius: 6px;
       font-size: 12px;
-      width: 160px;
+      width: 155px;
       user-select: text;
       -webkit-user-select: text;
     }
@@ -480,7 +508,7 @@
       background: #1e293b;
       border: 1px solid #334155;
       color: #94a3b8;
-      padding: 4px 9px;
+      padding: 4px 8px;
       border-radius: 12px;
       font-size: 10px;
       font-weight: 700;
@@ -494,7 +522,7 @@
 
     .grid-list {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(225px, 1fr));
       gap: 6px;
     }
 
@@ -516,7 +544,7 @@
     }
 
     .card-title {
-      font-size: 12px;
+      font-size: 11.5px;
       font-weight: 800;
       color: #f8fafc;
     }
@@ -526,13 +554,19 @@
       color: #94a3b8;
     }
 
+    .card-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
     .card-btn {
       background: #059669;
       color: #fff;
       border: none;
       border-radius: 5px;
-      padding: 6px 10px;
-      font-size: 11px;
+      padding: 5px 9px;
+      font-size: 10.5px;
       font-weight: 800;
       white-space: nowrap;
     }
@@ -542,11 +576,9 @@
       color: #64748b;
     }
 
-    .card-btn.equip {
-      background: #2563eb;
-    }
+    .card-btn.equip { background: #2563eb; }
+    .card-btn.use-now { background: #16a34a; }
 
-    /* Portrait Warning */
     #rotate-overlay {
       display: none;
       position: fixed;
@@ -566,23 +598,29 @@
 </head>
 <body>
   <div id="game-container"></div>
+  <div id="damage-vignette"></div>
 
   <div id="rotate-overlay">
     <div>
-      <h2 style="color:#ef4444; margin-bottom:8px;">УТСАА ХЭВТҮҮЛНЭ ҮҮ</h2>
-      <p style="color:#94a3b8; font-size:14px;">4000x4000 ертөнц болон 520 crafting цэсийг ашиглахын тулд утсаа хэвтээ болгоно уу.</p>
+      <h2 style="color:#ea580c; margin-bottom:8px;">УТСАА ХЭВТҮҮЛНЭ ҮҮ</h2>
+      <p style="color:#94a3b8; font-size:14px;">Rust 3D Survival тоглохын тулд утсаа хэвтээ болгоно уу.</p>
     </div>
   </div>
 
   <!-- MAIN HUD -->
   <div id="hud">
-    <div id="status-panel">
-      <div class="bar-row">❤️ <div class="bar-track"><div id="hp-fill" class="bar-fill"></div></div> <span id="hp-text">100</span></div>
-      <div class="bar-row">🍖 <div class="bar-track"><div id="hunger-fill" class="bar-fill"></div></div> <span id="hunger-text">100</span></div>
-      <div class="bar-row">💧 <div class="bar-track"><div id="thirst-fill" class="bar-fill"></div></div> <span id="thirst-text">100</span></div>
-      <div id="map-info">
-        <span id="zone-label">SAFE ZONE</span> | <span id="coord-label">X:0 Z:0</span> | <span id="fps-label">60 FPS</span>
-      </div>
+    <!-- Top Left Zone & Coords -->
+    <div id="top-telemetry">
+      <div id="zone-label">SAFE ZONE (АЮУЛГҮЙ БҮС)</div>
+      <div id="coord-label">X: 0 | Z: 0 | 60 FPS</div>
+    </div>
+
+    <!-- Rust-Style Bottom-Left Vitals -->
+    <div id="rust-vitals">
+      <div class="vital-row">❤️ <div class="vital-bar"><div id="hp-fill" class="vital-fill"></div></div> <span id="hp-text">100</span></div>
+      <div class="vital-row">💧 <div class="vital-bar"><div id="thirst-fill" class="vital-fill"></div></div> <span id="thirst-text">100</span></div>
+      <div class="vital-row">🍖 <div class="vital-bar"><div id="hunger-fill" class="vital-fill"></div></div> <span id="hunger-text">100</span></div>
+      <div class="vital-row">🛡️ <div class="vital-bar"><div id="armor-fill" class="vital-fill" style="width:0%"></div></div> <span id="armor-text">0</span></div>
     </div>
 
     <!-- Active Boss Health Bar -->
@@ -591,7 +629,7 @@
       <div id="boss-hp-track"><div id="boss-hp-fill"></div></div>
     </div>
 
-    <!-- Top Right Buttons -->
+    <!-- Top Right Utility Buttons -->
     <div id="top-right-controls">
       <button id="btn-open-bag" class="top-btn" type="button">🎒 ЦҮНХ / CRAFT (520)</button>
       <button id="btn-light" class="top-btn active" type="button">🔦</button>
@@ -599,8 +637,8 @@
     </div>
 
     <div id="crosshair"></div>
-    <div id="target-prompt">Хайрцаг нээх [LOOT]</div>
-    <div id="ammo-hud">СУМ: 15 / 60</div>
+    <div id="target-prompt">Торх / Хайрцаг нээх [LOOT]</div>
+    <div id="held-info-banner">Гарт: Автомат Винтов | Сум: 30 / 90</div>
     <div id="toast-box"></div>
 
     <!-- 8-Slot Quick Equip Hotbar -->
@@ -616,23 +654,23 @@
     <!-- Right Camera Look Area -->
     <div id="look-zone"></div>
 
-    <!-- Right Thumb Action Buttons -->
+    <!-- Right Thumb Action Pad -->
     <div id="action-pad">
-      <button id="btn-loot" class="act-btn" type="button">📦 LOOT<br/>АВАХ</button>
-      <button id="btn-use" class="act-btn" type="button">🔥 FIRE<br/>ХЭРЭГЛЭХ</button>
-      <button id="btn-reload" class="act-btn" type="button">🔄<br/>RELOAD</button>
-      <button id="btn-jump" class="act-btn" type="button">⬆️<br/>JUMP</button>
-      <button id="btn-sprint" class="act-btn" type="button">⚡<br/>SPRINT</button>
-      <button id="btn-crouch" class="act-btn" type="button">⬇️<br/>CROUCH</button>
+      <button id="btn-ads" class="act-btn" type="button">🎯<br/>ДУРАН</button>
+      <button id="btn-loot" class="act-btn" type="button">📦<br/>LOOT</button>
+      <button id="btn-use" class="act-btn" type="button">🔫<br/>БУУДАХ</button>
+      <button id="btn-reload" class="act-btn" type="button">🔄<br/>ЦЭНЭГ</button>
+      <button id="btn-jump" class="act-btn" type="button">⬆️<br/>ҮСРЭХ</button>
+      <button id="btn-sprint" class="act-btn" type="button">⚡<br/>ГҮЙХ</button>
     </div>
   </div>
 
-  <!-- INVENTORY, 520 CRAFTING & 40 ZOMBIES MODAL -->
+  <!-- INVENTORY, 520 CRAFTING & BESTIARY MODAL -->
   <div id="modal-overlay">
     <div class="modal-header">
       <div class="modal-tabs">
-        <button class="tab-btn active" data-tab="craft">🔨 УРЛАХ (520 ЖОР)</button>
-        <button class="tab-btn" data-tab="inv">🎒 МИНИЙ ЦҮНХ</button>
+        <button class="tab-btn active" data-tab="inv">🎒 МИНИЙ ЦҮНХ (ХЭРЭГЛЭХ)</button>
+        <button class="tab-btn" data-tab="craft">🔨 УРЛАХ (520 ЖОР)</button>
         <button class="tab-btn" data-tab="zombies">🧟 20 ЗОМБИ + 20 BOSS</button>
       </div>
       <button id="btn-close-modal" type="button">✕ ХААХ</button>
@@ -644,14 +682,203 @@
     import * as THREE from 'three';
 
     // =========================================================
-    // 1. COMPLETE GAME DATABASE: 520 CRAFTABLES, 20 ZOMBIES, 20 BOSSES
+    // 1. PROCEDURAL WEB AUDIO SYNTHESIZER (REALISTIC SFX)
+    // =========================================================
+    class SoundFX {
+      constructor() {
+        this.ctx = null;
+      }
+
+      unlock() {
+        if (!this.ctx) {
+          const AudioCtx = window.AudioContext || window.webkitAudioContext;
+          if (AudioCtx) this.ctx = new AudioCtx();
+        }
+        if (this.ctx && this.ctx.state === 'suspended') {
+          this.ctx.resume().catch(() => {});
+        }
+      }
+
+      playGunshot(pitch = 1.0) {
+        this.unlock();
+        if (!this.ctx) return;
+        const now = this.ctx.currentTime;
+
+        // Punchy low-end boom
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(160 * pitch, now);
+        osc.frequency.exponentialRampToValueAtTime(32, now + 0.16);
+        gain.gain.setValueAtTime(0.32, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.18);
+
+        // Crisp white noise crack
+        const bufSize = this.ctx.sampleRate * 0.12;
+        const buf = this.ctx.createBuffer(1, bufSize, this.ctx.sampleRate);
+        const data = buf.getChannelData(0);
+        for (let i = 0; i < bufSize; i++) data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufSize * 0.25));
+        const noise = this.ctx.createBufferSource();
+        noise.buffer = buf;
+        const nGain = this.ctx.createGain();
+        nGain.gain.setValueAtTime(0.28, now);
+        nGain.gain.exponentialRampToValueAtTime(0.01, now + 0.12);
+        noise.connect(nGain);
+        nGain.connect(this.ctx.destination);
+        noise.start(now);
+      }
+
+      playImpact(freq = 120) {
+        this.unlock();
+        if (!this.ctx) return;
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(freq, now);
+        osc.frequency.exponentialRampToValueAtTime(40, now + 0.1);
+        gain.gain.setValueAtTime(0.25, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.11);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.11);
+      }
+
+      playReload() {
+        this.unlock();
+        if (!this.ctx) return;
+        const now = this.ctx.currentTime;
+        [0, 0.14].forEach((offset, idx) => {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'square';
+          osc.frequency.setValueAtTime(idx === 0 ? 520 : 780, now + offset);
+          gain.gain.setValueAtTime(0.12, now + offset);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + offset + 0.06);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start(now + offset);
+          osc.stop(now + offset + 0.06);
+        });
+      }
+
+      playUseItem() {
+        this.unlock();
+        if (!this.ctx) return;
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(340, now);
+        osc.frequency.exponentialRampToValueAtTime(680, now + 0.22);
+        gain.gain.setValueAtTime(0.18, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.24);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.24);
+      }
+    }
+
+    // =========================================================
+    // 2. RUST-STYLE PROCEDURAL PBR TEXTURES (ALBEDO + BUMP MAP)
+    // =========================================================
+    class PBRTextures {
+      static createPBRSet(baseRGB, grain, repeat, style = 'noise') {
+        const size = 256;
+        const cColor = document.createElement('canvas');
+        const cBump = document.createElement('canvas');
+        cColor.width = cBump.width = size;
+        cColor.height = cBump.height = size;
+
+        const ctx = cColor.getContext('2d');
+        const btx = cBump.getContext('2d');
+
+        ctx.fillStyle = `rgb(${baseRGB[0]},${baseRGB[1]},${baseRGB[2]})`;
+        ctx.fillRect(0, 0, size, size);
+        btx.fillStyle = 'rgb(128,128,128)';
+        btx.fillRect(0, 0, size, size);
+
+        // Micro surface detail & bump height
+        for (let i = 0; i < 3600; i++) {
+          const x = Math.random() * size;
+          const y = Math.random() * size;
+          const d = (Math.random() - 0.5) * grain;
+          ctx.fillStyle = `rgb(${Math.max(0, Math.min(255, baseRGB[0] + d)) | 0},${Math.max(0, Math.min(255, baseRGB[1] + d)) | 0},${Math.max(0, Math.min(255, baseRGB[2] + d)) | 0})`;
+          ctx.fillRect(x, y, 3, 3);
+
+          const bVal = Math.max(0, Math.min(255, 128 + d * 1.6)) | 0;
+          btx.fillStyle = `rgb(${bVal},${bVal},${bVal})`;
+          btx.fillRect(x, y, 3, 3);
+        }
+
+        if (style === 'wood') {
+          // Wood plank seams & longitudinal grain
+          ctx.strokeStyle = 'rgba(25, 14, 6, 0.55)';
+          btx.strokeStyle = 'rgb(35, 35, 35)';
+          ctx.lineWidth = btx.lineWidth = 3;
+          for (let p = 0; p < size; p += 64) {
+            ctx.beginPath(); ctx.moveTo(0, p); ctx.lineTo(size, p); ctx.stroke();
+            btx.beginPath(); btx.moveTo(0, p); btx.lineTo(size, p); btx.stroke();
+          }
+          for (let g = 0; g < 90; g++) {
+            const y = Math.random() * size;
+            ctx.fillStyle = 'rgba(40, 22, 10, 0.16)';
+            ctx.fillRect(0, y, size, 1.5);
+            btx.fillStyle = 'rgba(95, 95, 95, 0.35)';
+            btx.fillRect(0, y, size, 1.5);
+          }
+        } else if (style === 'rust') {
+          // Rust blotches & metallic scratches
+          for (let r = 0; r < 24; r++) {
+            const rx = Math.random() * size;
+            const ry = Math.random() * size;
+            const rad = 8 + Math.random() * 22;
+            ctx.fillStyle = 'rgba(138, 54, 20, 0.34)';
+            ctx.beginPath(); ctx.arc(rx, ry, rad, 0, Math.PI * 2); ctx.fill();
+            btx.fillStyle = 'rgba(85, 85, 85, 0.45)';
+            btx.beginPath(); btx.arc(rx, ry, rad, 0, Math.PI * 2); btx.fill();
+          }
+        } else if (style === 'concrete') {
+          // Concrete fractures & formwork lines
+          ctx.strokeStyle = 'rgba(20, 24, 28, 0.48)';
+          btx.strokeStyle = 'rgb(45, 45, 45)';
+          ctx.lineWidth = btx.lineWidth = 2;
+          for (let c = 0; c < 10; c++) {
+            ctx.beginPath(); btx.beginPath();
+            let x = Math.random() * size, y = Math.random() * size;
+            ctx.moveTo(x, y); btx.moveTo(x, y);
+            for (let s = 0; s < 5; s++) {
+              x += (Math.random() - 0.5) * 48;
+              y += (Math.random() - 0.5) * 48;
+              ctx.lineTo(x, y); btx.lineTo(x, y);
+            }
+            ctx.stroke(); btx.stroke();
+          }
+        }
+
+        const map = new THREE.CanvasTexture(cColor);
+        const bumpMap = new THREE.CanvasTexture(cBump);
+        map.wrapS = map.wrapT = bumpMap.wrapS = bumpMap.wrapT = THREE.RepeatWrapping;
+        map.repeat.set(repeat, repeat);
+        bumpMap.repeat.set(repeat, repeat);
+        return { map, bumpMap };
+      }
+    }
+
+    // =========================================================
+    // 3. COMPLETE CATALOG: 520 CRAFTS, 20 ZOMBIES, 20 BOSSES
     // =========================================================
     class GameCatalog {
       static init() {
         this.items = {};
         this.recipes = [];
 
-        // Base Gatherable & Lootable Resources
         const rawMaterials = [
           { id: 'wood', name: 'Мод (Wood)', icon: '🪵', cat: 'Material', desc: 'Ой модноос цавчиж авна' },
           { id: 'stone', name: 'Чулуу (Stone)', icon: '🪨', cat: 'Material', desc: 'Хад чулуунаас олборлоно' },
@@ -660,26 +887,22 @@
           { id: 'sulfur', name: 'Хүхэр (Sulfur)', icon: '🟡', cat: 'Material', desc: 'Дарь хийхэд ашиглана' },
           { id: 'titanium_ore', name: 'Титан Хүдэр', icon: '💠', cat: 'Material', desc: 'Ховор хүдэр' },
           { id: 'cloth', name: 'Даавуу (Cloth)', icon: '🧵', cat: 'Material', desc: 'Бинт, хувцас хийнэ' },
-          { id: 'scrap_metal', name: 'Хаягдал Төмөр', icon: '⚙️', cat: 'Material', desc: 'Хотын хайрцагнаас олно' },
+          { id: 'scrap_metal', name: 'Хаягдал Төмөр (Scrap)', icon: '⚙️', cat: 'Material', desc: 'Rust торх болон хайрцагнаас олно' },
           { id: 'chemical', name: 'Химийн Бодис', icon: '🧪', cat: 'Material', desc: 'Эм, тэсрэх бөмбөгөнд орно' },
           { id: 'zombie_blood', name: 'Зомбигийн Цус', icon: '🩸', cat: 'Material', desc: 'Зомби устгахад унана' },
           { id: 'mutant_gland', name: 'Мутант Булчирхай', icon: '🧬', cat: 'Material', desc: 'Тусгай зомбиноос унана' },
           { id: 'boss_core', name: 'BOSS Цөм (Core)', icon: '🔮', cat: 'Material', desc: 'Boss устгахад унадаг хүчирхэг цөм' },
-          { id: 'dirty_water', name: 'Түүхий Ус', icon: '🫗', cat: 'Survival', desc: 'Цэвэршүүлж ууна' },
-          { id: 'raw_meat', name: 'Түүхий Мах', icon: '🥩', cat: 'Survival', desc: 'Шарж иднэ' }
+          { id: 'dirty_water', name: 'Түүхий Ус', icon: '🫗', cat: 'Survival', desc: 'Уухад +20 цангаа тайлна', type: 'consumable', hp: 0, hunger: 0, thirst: 20 },
+          { id: 'raw_meat', name: 'Түүхий Мах', icon: '🥩', cat: 'Survival', desc: 'Идэхэд +15 өлсгөлөн дарна', type: 'consumable', hp: -5, hunger: 15, thirst: 0 }
         ];
+        for (const m of rawMaterials) this.items[m.id] = m;
 
-        for (const m of rawMaterials) {
-          this.items[m.id] = m;
-        }
-
-        // Helper to register both Item and Crafting Recipe
         const addCraft = (id, name, icon, cat, desc, reqs, outQty = 1, props = {}) => {
           this.items[id] = { id, name, icon, cat, desc, ...props };
           this.recipes.push({ id, name, icon, cat, desc, reqs, outQty });
         };
 
-        // --- A. REFINED MATERIALS & PARTS (45 items) ---
+        // A. MATERIALS (45)
         addCraft('wood_plank', 'Модон Банз', '🪚', 'Material', 'Барилга, зэвсгийн иш', { wood: 2 }, 4);
         addCraft('cut_stone', 'Зассан Чулуу', '🧱', 'Material', 'Чулуун барилгын материал', { stone: 2 }, 3);
         addCraft('iron_ingot', 'Төмөр Гулдмай', '🔩', 'Material', 'Хайлуулсан цэвэр төмөр', { iron_ore: 2, wood: 1 }, 2);
@@ -696,38 +919,29 @@
         addCraft('glass', 'Шил (Glass)', '🪟', 'Material', 'Дуран болон цонхонд орно', { stone: 3 }, 2);
         addCraft('charcoal', 'Нүүрс (Charcoal)', '⚫', 'Material', 'Шатсан модны нүүрс', { wood: 2 }, 3);
 
-        // Generate 30 Industrial Alloys & Mechanical Parts to reach 45 Materials
         const partPrefixes = ['Хөнгөн', 'Хүнд', 'Цэргийн', 'Сайжруулсан', 'Титан', 'Нано'];
         const partNouns = ['Араа', 'Хоолой', 'Хуудас', 'Түгжээ', 'Хөдөлгүүр'];
         let pIdx = 1;
         for (const pre of partPrefixes) {
           for (const noun of partNouns) {
-            addCraft(
-              `part_${pIdx}`,
-              `${pre} ${noun}`,
-              '🔧',
-              'Material',
-              `Үйлдвэрлэлийн эд анги #${pIdx}`,
-              { iron_ingot: 1, scrap_metal: 1 },
-              1
-            );
+            addCraft(`part_${pIdx}`, `${pre} ${noun}`, '🔧', 'Material', `Үйлдвэрлэлийн эд анги #${pIdx}`, { iron_ingot: 1, scrap_metal: 1 }, 1);
             pIdx++;
           }
         }
 
-        // --- B. TOOLS (50 items) ---
+        // B. TOOLS (50)
         const toolTiers = [
-          { tag: 'Чулуун', mat: 'stone', mult: 1.0, icon: '🪓' },
-          { tag: 'Төмөр', mat: 'iron_ingot', mult: 1.5, icon: '⛏️' },
-          { tag: 'Ган', mat: 'steel_ingot', mult: 2.2, icon: '⚒️' },
-          { tag: 'Титан', mat: 'titanium_ingot', mult: 3.0, icon: '🔱' },
-          { tag: 'Лазер', mat: 'boss_core', mult: 4.5, icon: '⚡' }
+          { tag: 'Чулуун', mat: 'stone', mult: 1.0, icon: '🪓', col: 0x9ca3af },
+          { tag: 'Төмөр', mat: 'iron_ingot', mult: 1.5, icon: '⛏️', col: 0xd1d5db },
+          { tag: 'Ган', mat: 'steel_ingot', mult: 2.2, icon: '⚒️', col: 0x64748b },
+          { tag: 'Титан', mat: 'titanium_ingot', mult: 3.0, icon: '🔱', col: 0x38bdf8 },
+          { tag: 'Лазер', mat: 'boss_core', mult: 4.5, icon: '⚡', col: 0xf43f5e }
         ];
         const toolTypes = [
-          { code: 'axe', name: 'Сүх', desc: 'Мод хурдан цавчина' },
-          { code: 'pick', name: 'Зээтүү', desc: 'Чулуу, хүдэр олборлоно' },
-          { code: 'hammer', name: 'Барилгын Алх', desc: 'Барилга засах, барих' },
-          { code: 'crowbar', name: 'Лоом', desc: 'Хайрцаг эвдэх, цохих' },
+          { code: 'axe', name: 'Сүх (Hatchet)', desc: 'Мод хурдан цавчина' },
+          { code: 'pick', name: 'Зээтүү (Pickaxe)', desc: 'Чулуу, хүдэр олборлоно' },
+          { code: 'hammer', name: 'Барилгын Алх', desc: 'Барилга барих, засах' },
+          { code: 'crowbar', name: 'Лоом (Crowbar)', desc: 'Торх эвдэх, цохих' },
           { code: 'saw', name: 'Хөрөө', desc: 'Мод боловсруулах' },
           { code: 'shovel', name: 'Хүрз', desc: 'Газар ухах багаж' },
           { code: 'drill', name: 'Өрөм', desc: 'Хүдэр өрөмдөх' },
@@ -743,27 +957,24 @@
               tier.icon,
               'Tool',
               `${tt.desc} (Хүч: x${tier.mult})`,
-              { [tier.mat]: 2, wood_plank: 1 },
+              { [tier.mat]: 2, wood: 1 },
               1,
-              { type: 'tool', power: Math.round(25 * tier.mult), color: 0x94a3b8 }
+              { type: 'tool', subType: tt.code, power: Math.round(30 * tier.mult), color: tier.col }
             );
           }
         }
 
-        // --- C. MELEE WEAPONS (70 items) ---
+        // C. MELEE WEAPONS (70)
         const meleeTiers = [
-          { tag: 'Модон', mat: 'wood_plank', dmg: 28, col: 0x854d0e },
-          { tag: 'Хадаастай', mat: 'scrap_metal', dmg: 42, col: 0x71717a },
-          { tag: 'Төмөр', mat: 'iron_ingot', dmg: 58, col: 0x9ca3af },
-          { tag: 'Ган', mat: 'steel_ingot', dmg: 80, col: 0xd1d5db },
-          { tag: 'Хортой', mat: 'mutant_gland', dmg: 105, col: 0x22c55e },
-          { tag: 'Титан', mat: 'titanium_ingot', dmg: 135, col: 0x38bdf8 },
-          { tag: 'Плазма', mat: 'boss_core', dmg: 210, col: 0xf43f5e }
+          { tag: 'Модон', mat: 'wood_plank', dmg: 32, col: 0x854d0e },
+          { tag: 'Хадаастай', mat: 'scrap_metal', dmg: 46, col: 0x71717a },
+          { tag: 'Төмөр', mat: 'iron_ingot', dmg: 64, col: 0x9ca3af },
+          { tag: 'Ган', mat: 'steel_ingot', dmg: 88, col: 0xd1d5db },
+          { tag: 'Хортой', mat: 'mutant_gland', dmg: 115, col: 0x22c55e },
+          { tag: 'Титан', mat: 'titanium_ingot', dmg: 145, col: 0x38bdf8 },
+          { tag: 'Плазма', mat: 'boss_core', dmg: 220, col: 0xf43f5e }
         ];
-        const meleeShapes = [
-          'Бороохой', 'Хутга', 'Мачете', 'Сэлэм', 'Катана',
-          'Лантуу Алх', 'Жад', 'Байлдааны Сүх', 'Гинжин Хөрөө', 'Илд'
-        ];
+        const meleeShapes = ['Бороохой', 'Хутга', 'Мачете', 'Сэлэм', 'Катана', 'Лантуу Алх', 'Жад', 'Байлдааны Сүх', 'Гинжин Хөрөө', 'Илд'];
         for (const mt of meleeTiers) {
           for (let i = 0; i < meleeShapes.length; i++) {
             addCraft(
@@ -772,36 +983,36 @@
               '🗡️',
               'Weapon',
               `Ойрын тулааны зэвсэг | Хохирол: ${mt.dmg}`,
-              { [mt.mat]: 2, rope: 1 },
+              { [mt.mat]: 2, cloth: 1 },
               1,
               { type: 'melee', damage: mt.dmg, color: mt.col }
             );
           }
         }
 
-        // --- D. FIREARMS / GUNS (90 items) ---
+        // D. FIREARMS / GUNS (90)
         const gunClasses = [
-          { code: 'pistol', name: 'Гар Буу (Pistol)', ammo: 'ammo_9mm', mag: 15, rate: 0.25, baseDmg: 34, col: 0x334155 },
-          { code: 'revolver', name: 'Револьвер (Magnum)', ammo: 'ammo_9mm', mag: 6, rate: 0.42, baseDmg: 68, col: 0x64748b },
-          { code: 'smg', name: 'Автомат Гар Буу (SMG)', ammo: 'ammo_9mm', mag: 32, rate: 0.1, baseDmg: 28, col: 0x1e293b },
-          { code: 'shotgun', name: 'Ангийн Буу (Shotgun)', ammo: 'ammo_12g', mag: 8, rate: 0.65, baseDmg: 115, col: 0x475569 },
-          { code: 'ar', name: 'Автомат Винтов (AR)', ammo: 'ammo_556', mag: 30, rate: 0.13, baseDmg: 46, col: 0x0f172a },
-          { code: 'ak', name: 'АК-47 Винтов', ammo: 'ammo_762', mag: 30, rate: 0.15, baseDmg: 56, col: 0x78350f },
-          { code: 'dmr', name: 'Хагас Автомат Винтов', ammo: 'ammo_762', mag: 16, rate: 0.28, baseDmg: 82, col: 0x3f6212 },
-          { code: 'sniper', name: 'Мэргэн Буудагч (Sniper)', ammo: 'ammo_50', mag: 5, rate: 0.95, baseDmg: 195, col: 0x14532d },
-          { code: 'lmg', name: 'Хүнд Пулемёт (LMG)', ammo: 'ammo_762', mag: 80, rate: 0.11, baseDmg: 52, col: 0x27272a },
-          { code: 'railgun', name: 'Плазма Лазер Буу', ammo: 'ammo_energy', mag: 20, rate: 0.22, baseDmg: 260, col: 0x0284c7 }
+          { code: 'pistol', name: 'Гар Буу (Pistol)', ammo: 'ammo_9mm', mag: 15, rate: 0.22, auto: false, baseDmg: 36, col: 0x334155 },
+          { code: 'revolver', name: 'Револьвер (Python)', ammo: 'ammo_9mm', mag: 6, rate: 0.38, auto: false, baseDmg: 74, col: 0x64748b },
+          { code: 'smg', name: 'Автомат Гар Буу (SMG)', ammo: 'ammo_9mm', mag: 32, rate: 0.09, auto: true, baseDmg: 30, col: 0x1e293b },
+          { code: 'shotgun', name: 'Ангийн Буу (Pump Shotgun)', ammo: 'ammo_12g', mag: 8, rate: 0.6, auto: false, baseDmg: 125, col: 0x475569 },
+          { code: 'ar', name: 'Автомат Винтов (LR-300)', ammo: 'ammo_556', mag: 30, rate: 0.11, auto: true, baseDmg: 48, col: 0x1f2937 },
+          { code: 'ak', name: 'АК-47 Винтов (Assault Rifle)', ammo: 'ammo_762', mag: 30, rate: 0.13, auto: true, baseDmg: 58, col: 0x78350f },
+          { code: 'dmr', name: 'Хагас Автомат (M39)', ammo: 'ammo_762', mag: 16, rate: 0.25, auto: false, baseDmg: 86, col: 0x3f6212 },
+          { code: 'sniper', name: 'Мэргэн Буудагч (L96 Sniper)', ammo: 'ammo_50', mag: 5, rate: 0.85, auto: false, baseDmg: 210, col: 0x14532d },
+          { code: 'lmg', name: 'Хүнд Пулемёт (M249)', ammo: 'ammo_762', mag: 100, rate: 0.095, auto: true, baseDmg: 55, col: 0x27272a },
+          { code: 'railgun', name: 'Плазма Лазер Буу', ammo: 'ammo_energy', mag: 20, rate: 0.2, auto: true, baseDmg: 270, col: 0x0284c7 }
         ];
         const gunVariants = [
           { tag: 'Энгийн', mult: 1.0, extraMat: 'scrap_metal' },
           { tag: 'Дуу Намсагчтай', mult: 1.15, extraMat: 'iron_ingot' },
-          { tag: 'Тактикийн', mult: 1.3, extraMat: 'steel_ingot' },
-          { tag: 'Цэргийн', mult: 1.5, extraMat: 'spring' },
-          { tag: 'Хүндрүүлсэн', mult: 1.75, extraMat: 'gun_barrel' },
-          { tag: 'Сайжруулсан MK-II', mult: 2.0, extraMat: 'circuit' },
-          { tag: 'Титан MK-III', mult: 2.35, extraMat: 'titanium_ingot' },
-          { tag: 'Мутант Ангууч', mult: 2.75, extraMat: 'mutant_gland' },
-          { tag: 'BOSS Устгагч', mult: 3.4, extraMat: 'boss_core' }
+          { tag: 'Тактикийн', mult: 1.32, extraMat: 'steel_ingot' },
+          { tag: 'Цэргийн', mult: 1.52, extraMat: 'spring' },
+          { tag: 'Хүндрүүлсэн', mult: 1.78, extraMat: 'gun_barrel' },
+          { tag: 'Сайжруулсан MK-II', mult: 2.05, extraMat: 'circuit' },
+          { tag: 'Титан MK-III', mult: 2.4, extraMat: 'titanium_ingot' },
+          { tag: 'Мутант Ангууч', mult: 2.85, extraMat: 'mutant_gland' },
+          { tag: 'BOSS Устгагч', mult: 3.5, extraMat: 'boss_core' }
         ];
 
         for (const gc of gunClasses) {
@@ -814,13 +1025,15 @@
               '🔫',
               'Weapon',
               `Хохирол: ${dmg} | Магазин: ${gc.mag}`,
-              { gun_barrel: 1, [gv.extraMat]: 1, wood_plank: 1 },
+              { scrap_metal: 2, [gv.extraMat]: 1, wood: 1 },
               1,
               {
                 type: 'gun',
+                gunClass: gc.code,
                 damage: dmg,
                 magSize: gc.mag,
                 fireRate: gc.rate,
+                auto: gc.auto,
                 ammoType: gc.ammo,
                 color: gc.col
               }
@@ -828,40 +1041,30 @@
           }
         }
 
-        // --- E. AMMUNITION & GRENADES (45 items) ---
+        // E. AMMUNITION (45)
         const ammoDefs = [
           { id: 'ammo_9mm', name: '9мм Гар Бууны Сум', qty: 24, mat: 'iron_ingot' },
-          { id: 'ammo_556', name: '5.56мм Автомат Сум', qty: 30, mat: 'iron_ingot' },
-          { id: 'ammo_762', name: '7.62мм Хүнд Сум', qty: 25, mat: 'steel_ingot' },
+          { id: 'ammo_556', name: '5.56мм Автомат Сум', qty: 30, mat: 'scrap_metal' },
+          { id: 'ammo_762', name: '7.62мм Хүнд Сум', qty: 25, mat: 'iron_ingot' },
           { id: 'ammo_12g', name: '12-Калибрын Дробовик Сум', qty: 12, mat: 'scrap_metal' },
           { id: 'ammo_50', name: '.50 Снайпер Сум', qty: 8, mat: 'steel_ingot' },
           { id: 'ammo_energy', name: 'Плазма Энерги Цэнэг', qty: 15, mat: 'boss_core' }
         ];
         for (const a of ammoDefs) {
-          addCraft(a.id, a.name, '🔸', 'Ammo', `Нэг урлахад ${a.qty} ширхэг сум гарна`, { gunpowder: 1, [a.mat]: 1 }, a.qty, { type: 'ammo' });
+          addCraft(a.id, a.name, '🔸', 'Ammo', `Нэг урлахад ${a.qty} сум гарна`, { gunpowder: 1, [a.mat]: 1 }, a.qty, { type: 'ammo' });
         }
 
-        // 39 Special Rounds & Explosives
         const specialAmmoPrefixes = ['Шатаагч', 'Тэсрэх', 'Хортой', 'Хуяг Нэвтлэгч', 'Мөнгөн', 'Цахилгаан', 'Хөлдөөгч', 'Хэт Хурдан', 'Цөмийн', 'Мутант', 'Лазер', 'Хүнд', 'Хөнгөн'];
         const specialAmmoTypes = ['Сумны Багц', 'Гранат', 'Мина'];
         let saIdx = 1;
         for (const sp of specialAmmoPrefixes) {
           for (const st of specialAmmoTypes) {
-            addCraft(
-              `spec_ammo_${saIdx}`,
-              `${sp} ${st}`,
-              '💣',
-              'Ammo',
-              `Тусгай байлдааны хэрэгсэл #${saIdx}`,
-              { gunpowder: 2, scrap_metal: 1 },
-              3,
-              { type: 'ammo' }
-            );
+            addCraft(`spec_ammo_${saIdx}`, `${sp} ${st}`, '💣', 'Ammo', `Тусгай сум #${saIdx}`, { gunpowder: 2, scrap_metal: 1 }, 3, { type: 'ammo' });
             saIdx++;
           }
         }
 
-        // --- F. BASE BUILDING STRUCTURES (95 items) ---
+        // F. BASE BUILDING (95)
         const buildMats = [
           { tag: 'Модон', mat: 'wood_plank', hp: 250, col: 0x854d0e },
           { tag: 'Чулуун', mat: 'cut_stone', hp: 600, col: 0x64748b },
@@ -890,7 +1093,6 @@
           { code: 'turret', name: 'Автомат Хамгаалах Буу', w: 1.2, h: 1.6, d: 1.2, icon: '📡' },
           { code: 'tower', name: 'Харуулын Цамхаг', w: 2.5, h: 4.5, d: 2.5, icon: '🗼' }
         ];
-        // 5 * 19 = 95 Building items!
         for (const bm of buildMats) {
           for (const bs of buildShapes) {
             addCraft(
@@ -899,119 +1101,88 @@
               bs.icon,
               'Building',
               `Барилгын бүтэц | Бат бөх: ${bm.hp} HP`,
-              { [bm.mat]: 3 },
+              { [bm.mat]: 2 },
               1,
-              {
-                type: 'building',
-                w: bs.w,
-                h: bs.h,
-                d: bs.d,
-                hp: bm.hp,
-                color: bm.col,
-                isTurret: bs.code === 'turret'
-              }
+              { type: 'building', w: bs.w, h: bs.h, d: bs.d, hp: bm.hp, color: bm.col, isTurret: bs.code === 'turret' }
             );
           }
         }
 
-        // --- G. ARMOR & GEAR (65 items) ---
+        // G. ARMOR & GEAR (65)
         const armorTiers = ['Даавуун', 'Арьсан', 'Төмөр', 'Кевлар', 'Цагдаагийн', 'Цэргийн', 'Ган', 'Титан', 'Цацрагийн Хамгаалалттай', 'Кибер', 'Мутант', 'BOSS Хуяг', 'Нано'];
         const armorSlots = ['Дуулга (Helmet)', 'Хантааз (Vest)', 'Өмд (Leggings)', 'Гутал (Boots)', 'Үүргэвч (Backpack)'];
         let armIdx = 1;
         for (const at of armorTiers) {
           for (const aslot of armorSlots) {
-            const def = armIdx * 2;
-            addCraft(
-              `armor_${armIdx}`,
-              `${at} ${aslot}`,
-              '🦺',
-              'Armor',
-              `Хамгаалалт: +${def} Armor`,
-              { cloth: 2, scrap_metal: 1 },
-              1,
-              { type: 'armor', defense: def }
-            );
+            const def = armIdx * 3;
+            addCraft(`armor_${armIdx}`, `${at} ${aslot}`, '🦺', 'Armor', `Хамгаалалт: +${def} Armor`, { cloth: 2, scrap_metal: 1 }, 1, { type: 'armor', defense: def });
             armIdx++;
           }
         }
 
-        // --- H. MEDICAL, FOOD & SURVIVAL (65 items) ---
-        addCraft('bandage', 'Бинт (Bandage)', '🩹', 'Survival', '+25 Амь (HP) нөхнө', { cloth: 2 }, 2, { type: 'consumable', hp: 25, hunger: 0, thirst: 0 });
-        addCraft('medkit', 'Эмийн Сан (Medkit)', '🧰', 'Survival', '+75 Амь (HP) бүрэн нөхнө', { cloth: 3, chemical: 1 }, 1, { type: 'consumable', hp: 75, hunger: 0, thirst: 0 });
-        addCraft('adrenaline', 'Адреналин Тариа', '💉', 'Survival', '+100 HP, +30 Цангаа', { chemical: 2, zombie_blood: 1 }, 1, { type: 'consumable', hp: 100, hunger: 10, thirst: 30 });
-        addCraft('clean_water', 'Цэвэршүүлсэн Ус', '💧', 'Survival', '+45 Цангаа тайлна', { dirty_water: 1, charcoal: 1 }, 1, { type: 'consumable', hp: 5, hunger: 0, thirst: 45 });
-        addCraft('cooked_meat', 'Шарсан Мах', '🍖', 'Survival', '+50 Өлсгөлөн дарна, +15 HP', { raw_meat: 1, wood: 1 }, 1, { type: 'consumable', hp: 15, hunger: 50, thirst: -5 });
+        // H. MEDICAL, FOOD & SURVIVAL (65)
+        addCraft('bandage', 'Бинт (Bandage)', '🩹', 'Survival', '+30 Амь (HP) нөхнө', { cloth: 2 }, 2, { type: 'consumable', hp: 30, hunger: 0, thirst: 0 });
+        addCraft('medkit', 'Эмийн Сан (Medkit)', '🧰', 'Survival', '+80 Амь (HP) бүрэн нөхнө', { cloth: 2, chemical: 1 }, 1, { type: 'consumable', hp: 80, hunger: 0, thirst: 0 });
+        addCraft('adrenaline', 'Адреналин Тариа (Syringe)', '💉', 'Survival', '+100 HP, +35 Цангаа', { chemical: 1, zombie_blood: 1 }, 1, { type: 'consumable', hp: 100, hunger: 10, thirst: 35 });
+        addCraft('clean_water', 'Цэвэршүүлсэн Ус', '💧', 'Survival', '+50 Цангаа тайлна', { wood: 1, stone: 1 }, 2, { type: 'consumable', hp: 5, hunger: 0, thirst: 50 });
+        addCraft('cooked_meat', 'Шарсан Мах', '🍖', 'Survival', '+55 Өлсгөлөн дарна, +20 HP', { wood: 1, cloth: 1 }, 2, { type: 'consumable', hp: 20, hunger: 55, thirst: -5 });
 
-        // 60 Additional Herbal Teas, Rations & Antidotes
         const foodAdj = ['Эмийн', 'Эрч Хүчний', 'Цэргийн', 'Амин Дэмтэй', 'Уулын', 'Ойн', 'Халуун', 'Тусгай', 'Хүч Тамирын', 'Эдгээх', 'Цэвэр', 'Баяжуулсан'];
         const foodNoun = ['Шөл', 'Цай', 'Бэлдмэл', 'Хүнсний Багц', 'Эм'];
         let fIdx = 1;
         for (const fa of foodAdj) {
           for (const fn of foodNoun) {
-            addCraft(
-              `food_${fIdx}`,
-              `${fa} ${fn}`,
-              '🥫',
-              'Survival',
-              `+20 HP, +25 Өлсгөлөн, +25 Цангаа`,
-              { wood: 1, cloth: 1 },
-              1,
-              { type: 'consumable', hp: 20, hunger: 25, thirst: 25 }
-            );
+            addCraft(`food_${fIdx}`, `${fa} ${fn}`, '🥫', 'Survival', `+25 HP, +30 Өлсгөлөн, +30 Цангаа`, { wood: 1, cloth: 1 }, 1, { type: 'consumable', hp: 25, hunger: 30, thirst: 30 });
             fIdx++;
           }
         }
 
-        // =========================================================
         // 20 NORMAL ZOMBIE TYPES
-        // =========================================================
         this.zombieTypes = [
-          { id: 1, name: 'Жирийн Зомби (Walker)', hp: 80, speed: 2.3, dmg: 10, scale: 1.0, bodyCol: 0x4d6b53, eyeCol: 0xfef08a },
-          { id: 2, name: 'Гүйгч Зомби (Sprinter)', hp: 65, speed: 5.2, dmg: 12, scale: 0.96, bodyCol: 0x991b1b, eyeCol: 0xef4444 },
-          { id: 3, name: 'Танк Зомби (Brute)', hp: 260, speed: 1.7, dmg: 26, scale: 1.38, bodyCol: 0x3f3f46, eyeCol: 0xf97316 },
-          { id: 4, name: 'Хашгирагч (Screamer)', hp: 75, speed: 3.1, dmg: 11, scale: 0.98, bodyCol: 0xa21caf, eyeCol: 0xf0abfc },
-          { id: 5, name: 'Хуягтай Зомби (Armored)', hp: 210, speed: 2.1, dmg: 18, scale: 1.12, bodyCol: 0x1e293b, eyeCol: 0x38bdf8 },
-          { id: 6, name: 'Хортой Зомби (Toxic)', hp: 110, speed: 2.6, dmg: 17, scale: 1.05, bodyCol: 0x15803d, eyeCol: 0x4ade80 },
-          { id: 7, name: 'Мөлхөгч Зомби (Crawler)', hp: 60, speed: 3.8, dmg: 14, scale: 0.72, bodyCol: 0x713f12, eyeCol: 0xfacc15 },
-          { id: 8, name: 'Цагдаа Зомби (Riot Cop)', hp: 165, speed: 2.4, dmg: 16, scale: 1.06, bodyCol: 0x1d4ed8, eyeCol: 0x93c5fd },
-          { id: 9, name: 'Цэрэг Зомби (Soldier)', hp: 180, speed: 2.8, dmg: 20, scale: 1.08, bodyCol: 0x365314, eyeCol: 0xfef08a },
-          { id: 10, name: 'Эмч Зомби (Hazmat)', hp: 125, speed: 2.5, dmg: 15, scale: 1.04, bodyCol: 0xca8a04, eyeCol: 0xffffff },
-          { id: 11, name: 'Шатаж Буй Зомби (Scorched)', hp: 95, speed: 3.6, dmg: 22, scale: 1.0, bodyCol: 0xc2410c, eyeCol: 0xfb923c },
-          { id: 12, name: 'Хөлдсөн Зомби (Frostbite)', hp: 140, speed: 2.0, dmg: 16, scale: 1.05, bodyCol: 0x0284c7, eyeCol: 0xbae6fd },
-          { id: 13, name: 'Сүүдрийн Зомби (Stalker)', hp: 90, speed: 4.7, dmg: 19, scale: 0.95, bodyCol: 0x09090b, eyeCol: 0xa855f7 },
-          { id: 14, name: 'Дэлбэрэгч (Bloater)', hp: 130, speed: 2.2, dmg: 35, scale: 1.28, bodyCol: 0x65a30d, eyeCol: 0xfef08a },
-          { id: 15, name: 'Цацраг Идэвхт (Irradiated)', hp: 175, speed: 2.7, dmg: 23, scale: 1.1, bodyCol: 0x4d7c0f, eyeCol: 0xa3e635 },
-          { id: 16, name: 'Анчин Зомби (Hunter)', hp: 120, speed: 4.5, dmg: 21, scale: 1.02, bodyCol: 0x581c87, eyeCol: 0xe879f9 },
-          { id: 17, name: 'Уурхайчин Зомби (Miner)', hp: 155, speed: 2.3, dmg: 19, scale: 1.08, bodyCol: 0x44403c, eyeCol: 0xfde047 },
-          { id: 18, name: 'Цуст Зомби (Bloodletter)', hp: 115, speed: 3.9, dmg: 24, scale: 1.0, bodyCol: 0x7f1d1d, eyeCol: 0xf87171 },
-          { id: 19, name: 'Мутант Зомби (Mutant)', hp: 220, speed: 3.3, dmg: 27, scale: 1.22, bodyCol: 0x6b21a8, eyeCol: 0x38bdf8 },
-          { id: 20, name: 'Харанхуйн Шөнө (Nightmare)', hp: 240, speed: 4.2, dmg: 30, scale: 1.18, bodyCol: 0x18181b, eyeCol: 0xef4444 }
+          { id: 1, name: 'Жирийн Зомби (Walker)', hp: 85, speed: 2.3, dmg: 10, scale: 1.0, bodyCol: 0x4b5e4c, skinCol: 0x6b7c68, eyeCol: 0xfef08a },
+          { id: 2, name: 'Гүйгч Зомби (Sprinter)', hp: 70, speed: 5.2, dmg: 13, scale: 0.96, bodyCol: 0x881337, skinCol: 0x7f6868, eyeCol: 0xef4444 },
+          { id: 3, name: 'Танк Зомби (Brute)', hp: 280, speed: 1.75, dmg: 26, scale: 1.38, bodyCol: 0x3f3f46, skinCol: 0x5c665c, eyeCol: 0xf97316 },
+          { id: 4, name: 'Хашгирагч (Screamer)', hp: 80, speed: 3.1, dmg: 12, scale: 0.98, bodyCol: 0x86198f, skinCol: 0x7c7082, eyeCol: 0xf0abfc },
+          { id: 5, name: 'Хуягтай Зомби (Armored)', hp: 220, speed: 2.1, dmg: 18, scale: 1.12, bodyCol: 0x1e293b, skinCol: 0x64748b, eyeCol: 0x38bdf8 },
+          { id: 6, name: 'Хортой Зомби (Toxic)', hp: 115, speed: 2.6, dmg: 17, scale: 1.05, bodyCol: 0x166534, skinCol: 0x4d7c0f, eyeCol: 0x4ade80 },
+          { id: 7, name: 'Мөлхөгч Зомби (Crawler)', hp: 65, speed: 3.8, dmg: 14, scale: 0.75, bodyCol: 0x713f12, skinCol: 0x6b705c, eyeCol: 0xfacc15 },
+          { id: 8, name: 'Цагдаа Зомби (Riot Cop)', hp: 170, speed: 2.4, dmg: 16, scale: 1.06, bodyCol: 0x1e40af, skinCol: 0x6b7280, eyeCol: 0x93c5fd },
+          { id: 9, name: 'Цэрэг Зомби (Soldier)', hp: 185, speed: 2.8, dmg: 20, scale: 1.08, bodyCol: 0x365314, skinCol: 0x5c6b58, eyeCol: 0xfef08a },
+          { id: 10, name: 'Эмч Зомби (Hazmat)', hp: 130, speed: 2.5, dmg: 15, scale: 1.04, bodyCol: 0xca8a04, skinCol: 0x78716c, eyeCol: 0xffffff },
+          { id: 11, name: 'Шатаж Буй Зомби (Scorched)', hp: 100, speed: 3.6, dmg: 22, scale: 1.0, bodyCol: 0x9a3412, skinCol: 0x44403c, eyeCol: 0xfb923c },
+          { id: 12, name: 'Хөлдсөн Зомби (Frostbite)', hp: 145, speed: 2.0, dmg: 16, scale: 1.05, bodyCol: 0x0369a1, skinCol: 0x94a3b8, eyeCol: 0xe0f2fe },
+          { id: 13, name: 'Сүүдрийн Зомби (Stalker)', hp: 95, speed: 4.7, dmg: 19, scale: 0.95, bodyCol: 0x18181b, skinCol: 0x3f3f46, eyeCol: 0xa855f7 },
+          { id: 14, name: 'Дэлбэрэгч (Bloater)', hp: 135, speed: 2.2, dmg: 35, scale: 1.28, bodyCol: 0x4d7c0f, skinCol: 0x65a30d, eyeCol: 0xfef08a },
+          { id: 15, name: 'Цацраг Идэвхт (Irradiated)', hp: 180, speed: 2.7, dmg: 23, scale: 1.1, bodyCol: 0x3f6212, skinCol: 0x84cc16, eyeCol: 0xd9f99d },
+          { id: 16, name: 'Анчин Зомби (Hunter)', hp: 125, speed: 4.5, dmg: 21, scale: 1.02, bodyCol: 0x581c87, skinCol: 0x6b7280, eyeCol: 0xe879f9 },
+          { id: 17, name: 'Уурхайчин Зомби (Miner)', hp: 160, speed: 2.3, dmg: 19, scale: 1.08, bodyCol: 0x44403c, skinCol: 0x57534e, eyeCol: 0xfde047 },
+          { id: 18, name: 'Цуст Зомби (Bloodletter)', hp: 120, speed: 3.9, dmg: 24, scale: 1.0, bodyCol: 0x7f1d1d, skinCol: 0x7f6060, eyeCol: 0xf87171 },
+          { id: 19, name: 'Мутант Зомби (Mutant)', hp: 225, speed: 3.3, dmg: 27, scale: 1.22, bodyCol: 0x6b21a8, skinCol: 0x64748b, eyeCol: 0x38bdf8 },
+          { id: 20, name: 'Харанхуйн Шөнө (Nightmare)', hp: 245, speed: 4.2, dmg: 30, scale: 1.18, bodyCol: 0x09090b, skinCol: 0x27272a, eyeCol: 0xef4444 }
         ];
 
-        // =========================================================
         // 20 BOSS ZOMBIE TYPES
-        // =========================================================
         this.bossTypes = [
-          { id: 101, name: 'BOSS 01: АВАРГА ТИТАН (Goliath)', hp: 1500, speed: 2.4, dmg: 38, scale: 2.1, bodyCol: 0x7f1d1d, eyeCol: 0xfef08a },
-          { id: 102, name: 'BOSS 02: ЦУСТ ХААН (Crimson King)', hp: 1800, speed: 3.2, dmg: 42, scale: 1.95, bodyCol: 0x991b1b, eyeCol: 0xffffff },
-          { id: 103, name: 'BOSS 03: ТАХЛЫН ЭЗЭН (Plague Lord)', hp: 2100, speed: 2.6, dmg: 45, scale: 2.05, bodyCol: 0x14532d, eyeCol: 0x4ade80 },
-          { id: 104, name: 'BOSS 04: ТӨМӨР МАНГАС (Iron Juggernaut)', hp: 2600, speed: 2.0, dmg: 50, scale: 2.25, bodyCol: 0x1e293b, eyeCol: 0x38bdf8 },
-          { id: 105, name: 'BOSS 05: СҮҮДРИЙН АНГУУЧ (Abyss Stalker)', hp: 1700, speed: 4.8, dmg: 44, scale: 1.85, bodyCol: 0x09090b, eyeCol: 0xc084fc },
-          { id: 106, name: 'BOSS 06: ГАЛТ ЧӨТГӨР (Inferno Brute)', hp: 2300, speed: 3.0, dmg: 52, scale: 2.1, bodyCol: 0x9a3412, eyeCol: 0xfacc15 },
-          { id: 107, name: 'BOSS 07: МӨСӨН ХААН (Frost Sovereign)', hp: 2400, speed: 2.5, dmg: 46, scale: 2.1, bodyCol: 0x075985, eyeCol: 0xe0f2fe },
-          { id: 108, name: 'BOSS 08: ЦАЦРАГИЙН МАХЧИН (Reactor Beast)', hp: 2800, speed: 2.8, dmg: 55, scale: 2.2, bodyCol: 0x3f6212, eyeCol: 0xbef264 },
-          { id: 109, name: 'BOSS 09: ҮХЛИЙН ХАТАН (Necro Queen)', hp: 2200, speed: 3.6, dmg: 48, scale: 1.9, bodyCol: 0x581c87, eyeCol: 0xf472b6 },
-          { id: 110, name: 'BOSS 10: КИБЕР ТИРАН (Cyber Tyrant)', hp: 3100, speed: 3.1, dmg: 58, scale: 2.2, bodyCol: 0x0f172a, eyeCol: 0xef4444 },
-          { id: 111, name: 'BOSS 11: АГУЙН АРААТАН (Cave Behemoth)', hp: 3400, speed: 2.7, dmg: 62, scale: 2.35, bodyCol: 0x292524, eyeCol: 0xf97316 },
-          { id: 112, name: 'BOSS 12: ХОРТ МОГОЙ (Venom Hydra)', hp: 2700, speed: 3.8, dmg: 54, scale: 2.0, bodyCol: 0x065f46, eyeCol: 0x34d399 },
-          { id: 113, name: 'BOSS 13: АЯНГЫН МАНГАС (Storm Colossus)', hp: 3200, speed: 3.4, dmg: 60, scale: 2.25, bodyCol: 0x1e3a8a, eyeCol: 0xfde047 },
-          { id: 114, name: 'BOSS 14: ЯСНЫ ЭЗЭН (Bone Crusher)', hp: 3600, speed: 2.5, dmg: 66, scale: 2.4, bodyCol: 0x57534e, eyeCol: 0xef4444 },
-          { id: 115, name: 'BOSS 15: ЦЭРГИЙН ГЕНЕРАЛ (Omega General)', hp: 3900, speed: 3.3, dmg: 68, scale: 2.15, bodyCol: 0x1a2e05, eyeCol: 0xfbbf24 },
-          { id: 116, name: 'BOSS 16: ХАРАНХУЙН СҮНС (Void Reaper)', hp: 3500, speed: 4.5, dmg: 65, scale: 2.05, bodyCol: 0x18181b, eyeCol: 0xa855f7 },
-          { id: 117, name: 'BOSS 17: АЛТАН ГОЛЕМ (Gilded Titan)', hp: 4400, speed: 2.2, dmg: 74, scale: 2.45, bodyCol: 0x854d0e, eyeCol: 0xffffff },
-          { id: 118, name: 'BOSS 18: МУТАНТ АЛЬФА (Alpha Apex)', hp: 4800, speed: 3.9, dmg: 78, scale: 2.3, bodyCol: 0x701a75, eyeCol: 0x38bdf8 },
-          { id: 119, name: 'BOSS 19: СҮЙРЛИЙН ХААН (Doomsday Lord)', hp: 5500, speed: 3.5, dmg: 85, scale: 2.5, bodyCol: 0x450a0a, eyeCol: 0xfacc15 },
-          { id: 120, name: 'BOSS 20: ЭЦСИЙН ТИТАН (APOCALYPSE GOD)', hp: 7500, speed: 3.7, dmg: 98, scale: 2.8, bodyCol: 0x09090b, eyeCol: 0xef4444 }
+          { id: 101, name: 'BOSS 01: АВАРГА ТИТАН (Goliath)', hp: 1500, speed: 2.4, dmg: 38, scale: 2.05, bodyCol: 0x7f1d1d, skinCol: 0x57534e, eyeCol: 0xfef08a },
+          { id: 102, name: 'BOSS 02: ЦУСТ ХААН (Crimson King)', hp: 1800, speed: 3.2, dmg: 42, scale: 1.95, bodyCol: 0x991b1b, skinCol: 0x6b4c4c, eyeCol: 0xffffff },
+          { id: 103, name: 'BOSS 03: ТАХЛЫН ЭЗЭН (Plague Lord)', hp: 2100, speed: 2.6, dmg: 45, scale: 2.05, bodyCol: 0x14532d, skinCol: 0x4d7c0f, eyeCol: 0x4ade80 },
+          { id: 104, name: 'BOSS 04: ТӨМӨР МАНГАС (Iron Juggernaut)', hp: 2600, speed: 2.0, dmg: 50, scale: 2.2, bodyCol: 0x1e293b, skinCol: 0x475569, eyeCol: 0x38bdf8 },
+          { id: 105, name: 'BOSS 05: СҮҮДРИЙН АНГУУЧ (Abyss Stalker)', hp: 1700, speed: 4.8, dmg: 44, scale: 1.85, bodyCol: 0x09090b, skinCol: 0x27272a, eyeCol: 0xc084fc },
+          { id: 106, name: 'BOSS 06: ГАЛТ ЧӨТГӨР (Inferno Brute)', hp: 2300, speed: 3.0, dmg: 52, scale: 2.1, bodyCol: 0x9a3412, skinCol: 0x44403c, eyeCol: 0xfacc15 },
+          { id: 107, name: 'BOSS 07: МӨСӨН ХААН (Frost Sovereign)', hp: 2400, speed: 2.5, dmg: 46, scale: 2.1, bodyCol: 0x075985, skinCol: 0x94a3b8, eyeCol: 0xe0f2fe },
+          { id: 108, name: 'BOSS 08: ЦАЦРАГИЙН МАХЧИН (Reactor Beast)', hp: 2800, speed: 2.8, dmg: 55, scale: 2.2, bodyCol: 0x3f6212, skinCol: 0x65a30d, eyeCol: 0xbef264 },
+          { id: 109, name: 'BOSS 09: ҮХЛИЙН ХАТАН (Necro Queen)', hp: 2200, speed: 3.6, dmg: 48, scale: 1.9, bodyCol: 0x581c87, skinCol: 0x6b7280, eyeCol: 0xf472b6 },
+          { id: 110, name: 'BOSS 10: КИБЕР ТИРАН (Cyber Tyrant)', hp: 3100, speed: 3.1, dmg: 58, scale: 2.2, bodyCol: 0x0f172a, skinCol: 0x334155, eyeCol: 0xef4444 },
+          { id: 111, name: 'BOSS 11: АГУЙН АРААТАН (Cave Behemoth)', hp: 3400, speed: 2.7, dmg: 62, scale: 2.3, bodyCol: 0x292524, skinCol: 0x57534e, eyeCol: 0xf97316 },
+          { id: 112, name: 'BOSS 12: ХОРТ МОГОЙ (Venom Hydra)', hp: 2700, speed: 3.8, dmg: 54, scale: 2.0, bodyCol: 0x065f46, skinCol: 0x3f6212, eyeCol: 0x34d399 },
+          { id: 113, name: 'BOSS 13: АЯНГЫН МАНГАС (Storm Colossus)', hp: 3200, speed: 3.4, dmg: 60, scale: 2.25, bodyCol: 0x1e3a8a, skinCol: 0x475569, eyeCol: 0xfde047 },
+          { id: 114, name: 'BOSS 14: ЯСНЫ ЭЗЭН (Bone Crusher)', hp: 3600, speed: 2.5, dmg: 66, scale: 2.35, bodyCol: 0x57534e, skinCol: 0x78716c, eyeCol: 0xef4444 },
+          { id: 115, name: 'BOSS 15: ЦЭРГИЙН ГЕНЕРАЛ (Omega General)', hp: 3900, speed: 3.3, dmg: 68, scale: 2.15, bodyCol: 0x1a2e05, skinCol: 0x4d7c0f, eyeCol: 0xfbbf24 },
+          { id: 116, name: 'BOSS 16: ХАРАНХУЙН СҮНС (Void Reaper)', hp: 3500, speed: 4.5, dmg: 65, scale: 2.05, bodyCol: 0x18181b, skinCol: 0x27272a, eyeCol: 0xa855f7 },
+          { id: 117, name: 'BOSS 17: АЛТАН ГОЛЕМ (Gilded Titan)', hp: 4400, speed: 2.2, dmg: 74, scale: 2.4, bodyCol: 0x854d0e, skinCol: 0x713f12, eyeCol: 0xffffff },
+          { id: 118, name: 'BOSS 18: МУТАНТ АЛЬФА (Alpha Apex)', hp: 4800, speed: 3.9, dmg: 78, scale: 2.3, bodyCol: 0x701a75, skinCol: 0x581c87, eyeCol: 0x38bdf8 },
+          { id: 119, name: 'BOSS 19: СҮЙРЛИЙН ХААН (Doomsday Lord)', hp: 5500, speed: 3.5, dmg: 85, scale: 2.45, bodyCol: 0x450a0a, skinCol: 0x44403c, eyeCol: 0xfacc15 },
+          { id: 120, name: 'BOSS 20: ЭЦСИЙН ТИТАН (APOCALYPSE GOD)', hp: 7500, speed: 3.7, dmg: 98, scale: 2.75, bodyCol: 0x09090b, skinCol: 0x18181b, eyeCol: 0xef4444 }
         ];
       }
     }
@@ -1019,14 +1190,253 @@
     GameCatalog.init();
 
     // =========================================================
-    // 2. SEEDED RANDOM & 4000x4000 CHUNK STREAMING OPEN WORLD
+    // 4. RUST-STYLE FIRST-PERSON ARMS, HANDS & 3D WEAPON VIEWMODELS
+    // =========================================================
+    class FirstPersonViewmodel {
+      constructor(camera) {
+        this.camera = camera;
+        this.root = new THREE.Group();
+        this.weaponPivot = new THREE.Group();
+        this.weaponPivot.position.set(0.28, -0.25, -0.45);
+        this.root.add(this.weaponPivot);
+
+        // Shared Realistic Materials for Arms, Gloves & Weapons
+        const woodPBR = PBRTextures.createPBRSet([112, 72, 42], 32, 2, 'wood');
+        const rustPBR = PBRTextures.createPBRSet([52, 58, 64], 38, 2, 'rust');
+
+        this.matSkin = new THREE.MeshStandardMaterial({ color: 0xc69072, roughness: 0.78 });
+        this.matSleeve = new THREE.MeshStandardMaterial({ color: 0x3d4939, roughness: 0.9 });
+        this.matGlove = new THREE.MeshStandardMaterial({ color: 0x1c1e21, roughness: 0.85 });
+        this.matGunMetal = new THREE.MeshStandardMaterial({
+          map: rustPBR.map,
+          bumpMap: rustPBR.bumpMap,
+          bumpScale: 0.015,
+          metalness: 0.82,
+          roughness: 0.32
+        });
+        this.matGunWood = new THREE.MeshStandardMaterial({
+          map: woodPBR.map,
+          bumpMap: woodPBR.bumpMap,
+          bumpScale: 0.018,
+          roughness: 0.72
+        });
+
+        this.buildSurvivorArms();
+
+        // Muzzle Flash & Dynamic Point Light
+        this.muzzleFlash = new THREE.Mesh(
+          new THREE.OctahedronGeometry(0.11, 0),
+          new THREE.MeshBasicMaterial({ color: 0xfef08a, transparent: true, opacity: 0.92 })
+        );
+        this.muzzleFlash.visible = false;
+        this.muzzleLight = new THREE.PointLight(0xffb703, 0, 12);
+        this.weaponPivot.add(this.muzzleFlash, this.muzzleLight);
+
+        this.camera.add(this.root);
+      }
+
+      buildSurvivorArms() {
+        // Right Forearm + Gloved Hand + Fingers (Gripping Weapon/Tool)
+        this.rightArm = new THREE.Group();
+        const rSleeve = new THREE.Mesh(new THREE.CylinderGeometry(0.052, 0.062, 0.36, 10), this.matSleeve);
+        rSleeve.rotation.x = Math.PI / 2.2;
+        rSleeve.position.set(0.05, -0.14, 0.22);
+
+        const rWrist = new THREE.Mesh(new THREE.CylinderGeometry(0.044, 0.05, 0.14, 10), this.matSkin);
+        rWrist.rotation.x = Math.PI / 2.1;
+        rWrist.position.set(0.02, -0.08, 0.05);
+
+        const rPalm = new THREE.Mesh(new THREE.BoxGeometry(0.075, 0.085, 0.095), this.matGlove);
+        rPalm.position.set(0, -0.05, -0.02);
+
+        // 4 Wrapped Fingers
+        for (let f = 0; f < 4; f++) {
+          const finger = new THREE.Mesh(new THREE.BoxGeometry(0.068, 0.018, 0.02), this.matSkin);
+          finger.position.set(-0.015, -0.035 - f * 0.018, -0.055);
+          this.rightArm.add(finger);
+        }
+
+        this.rightArm.add(rSleeve, rWrist, rPalm);
+        this.weaponPivot.add(this.rightArm);
+
+        // Left Support Arm + Gloved Hand (Holds rifle forend or assists bandage/food)
+        this.leftArm = new THREE.Group();
+        const lSleeve = new THREE.Mesh(new THREE.CylinderGeometry(0.052, 0.064, 0.42, 10), this.matSleeve);
+        lSleeve.rotation.set(Math.PI / 2.4, 0, -0.45);
+        lSleeve.position.set(-0.34, -0.16, 0.05);
+
+        const lWrist = new THREE.Mesh(new THREE.CylinderGeometry(0.044, 0.05, 0.15, 10), this.matSkin);
+        lWrist.rotation.set(Math.PI / 2.3, 0, -0.42);
+        lWrist.position.set(-0.2, -0.09, -0.14);
+
+        const lHand = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.075, 0.09), this.matGlove);
+        lHand.position.set(-0.12, -0.04, -0.24);
+
+        this.leftArm.add(lSleeve, lWrist, lHand);
+        this.weaponPivot.add(this.leftArm);
+      }
+
+      setEquippedModel(item) {
+        if (this.itemMesh) {
+          this.weaponPivot.remove(this.itemMesh);
+          this.itemMesh = null;
+        }
+        this.leftArm.visible = false;
+
+        if (!item) return;
+
+        const g = new THREE.Group();
+        const customMat = new THREE.MeshStandardMaterial({
+          color: item.color || 0x475569,
+          metalness: 0.78,
+          roughness: 0.32
+        });
+
+        if (item.type === 'gun') {
+          const isRifle = ['ar', 'ak', 'dmr', 'sniper', 'lmg', 'shotgun', 'railgun', 'smg'].includes(item.gunClass);
+          this.leftArm.visible = isRifle;
+
+          // Receiver
+          const receiver = new THREE.Mesh(new THREE.BoxGeometry(0.068, 0.11, isRifle ? 0.36 : 0.24), customMat);
+          receiver.position.set(0, 0.03, -0.06);
+          g.add(receiver);
+
+          // Pistol Grip
+          const grip = new THREE.Mesh(new THREE.BoxGeometry(0.058, 0.13, 0.065), this.matGunWood);
+          grip.position.set(0, -0.05, 0.04);
+          grip.rotation.x = 0.25;
+          g.add(grip);
+
+          // Barrel & Muzzle
+          const barrelLen = item.gunClass === 'sniper' ? 0.56 : isRifle ? 0.38 : 0.18;
+          const barrel = new THREE.Mesh(new THREE.CylinderGeometry(0.014, 0.016, barrelLen, 10), this.matGunMetal);
+          barrel.rotation.x = Math.PI / 2;
+          barrel.position.set(0, 0.055, -0.18 - barrelLen / 2);
+          g.add(barrel);
+
+          if (isRifle) {
+            // Wooden / Tactical Handguard & Buttstock
+            const handguard = new THREE.Mesh(new THREE.BoxGeometry(0.062, 0.075, 0.24), item.gunClass === 'ak' || item.gunClass === 'shotgun' ? this.matGunWood : this.matGunMetal);
+            handguard.position.set(0, 0.035, -0.28);
+            g.add(handguard);
+
+            const stock = new THREE.Mesh(new THREE.BoxGeometry(0.055, 0.1, 0.22), this.matGunWood);
+            stock.position.set(0, 0.01, 0.19);
+            g.add(stock);
+
+            // Magazine
+            const mag = new THREE.Mesh(new THREE.BoxGeometry(0.052, 0.17, 0.075), this.matGunMetal);
+            mag.position.set(0, -0.08, -0.12);
+            mag.rotation.x = -0.22;
+            g.add(mag);
+          }
+
+          // Scope / Holo Sight
+          if (['sniper', 'dmr', 'ar', 'railgun'].includes(item.gunClass)) {
+            const scope = new THREE.Mesh(new THREE.CylinderGeometry(0.024, 0.024, 0.18, 12), this.matGunMetal);
+            scope.rotation.x = Math.PI / 2;
+            scope.position.set(0, 0.115, -0.05);
+            const lens = new THREE.Mesh(new THREE.CircleGeometry(0.02, 12), new THREE.MeshBasicMaterial({ color: 0x38bdf8 }));
+            lens.position.set(0, 0.115, 0.041);
+            g.add(scope, lens);
+          }
+
+          this.muzzleFlash.position.set(0, 0.055, -0.2 - barrelLen);
+          this.muzzleLight.position.copy(this.muzzleFlash.position);
+        } else if (item.type === 'tool' || item.type === 'melee') {
+          // Rust Stone/Metal Hatchet or Sword
+          const handle = new THREE.Mesh(new THREE.CylinderGeometry(0.022, 0.026, 0.56, 8), this.matGunWood);
+          handle.position.set(0, 0.12, -0.05);
+          handle.rotation.x = -0.18;
+          g.add(handle);
+
+          // Leather Rope Binding
+          const wrap = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.08, 8), this.matGlove);
+          wrap.position.set(0, 0.32, -0.09);
+          wrap.rotation.x = -0.18;
+          g.add(wrap);
+
+          if (item.type === 'melee') {
+            const blade = new THREE.Mesh(new THREE.BoxGeometry(0.018, 0.52, 0.065), customMat);
+            blade.position.set(0, 0.52, -0.13);
+            blade.rotation.x = -0.18;
+            g.add(blade);
+          } else {
+            const head = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.12, 0.26), customMat);
+            head.position.set(0, 0.34, -0.14);
+            head.rotation.x = -0.18;
+            g.add(head);
+          }
+        } else if (item.type === 'consumable') {
+          this.leftArm.visible = true;
+          // Medical Syringe / Bandage Roll / Food Can
+          const medBody = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.045, 0.045, 0.16, 12),
+            new THREE.MeshStandardMaterial({ color: item.id.includes('water') ? 0x0284c7 : item.id.includes('meat') ? 0x9a3412 : 0x16a34a, roughness: 0.4 })
+          );
+          medBody.position.set(-0.04, 0.02, -0.12);
+          g.add(medBody);
+        } else if (item.type === 'building') {
+          // Rolled Rust Building Blueprint
+          const bp = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.042, 0.042, 0.34, 12),
+            new THREE.MeshStandardMaterial({ color: 0x1d4ed8, roughness: 0.7 })
+          );
+          bp.rotation.x = Math.PI / 2.4;
+          bp.position.set(0, 0.02, -0.14);
+          g.add(bp);
+        }
+
+        this.itemMesh = g;
+        this.weaponPivot.add(g);
+      }
+
+      triggerRecoil(isGun = true) {
+        if (isGun) {
+          this.weaponPivot.position.z = -0.34;
+          this.weaponPivot.rotation.x = 0.14;
+          this.muzzleFlash.visible = true;
+          this.muzzleFlash.rotation.z = Math.random() * Math.PI;
+          this.muzzleLight.intensity = 4.5;
+          setTimeout(() => {
+            this.muzzleFlash.visible = false;
+            this.muzzleLight.intensity = 0;
+          }, 55);
+        }
+      }
+
+      update(dt, isADS, swingProgress, moveSpeed, time) {
+        const targetX = isADS ? 0.0 : 0.28;
+        const targetY = isADS ? -0.185 : -0.25;
+        const targetZ = isADS ? -0.36 : -0.45;
+
+        const bobX = moveSpeed > 0.3 && !isADS ? Math.cos(time * 9) * 0.012 : 0;
+        const bobY = moveSpeed > 0.3 && !isADS ? Math.abs(Math.sin(time * 9)) * 0.014 : Math.sin(time * 2) * 0.004;
+
+        this.weaponPivot.position.x += (targetX + bobX - this.weaponPivot.position.x) * Math.min(1, dt * 16);
+        this.weaponPivot.position.y += (targetY + bobY - this.weaponPivot.position.y) * Math.min(1, dt * 16);
+        this.weaponPivot.position.z += (targetZ - this.weaponPivot.position.z) * Math.min(1, dt * 16);
+
+        if (swingProgress > 0) {
+          const arc = Math.sin(swingProgress * Math.PI) * 1.25;
+          this.weaponPivot.rotation.x = -arc;
+          this.weaponPivot.rotation.z = arc * 0.25;
+        } else {
+          this.weaponPivot.rotation.x += (0 - this.weaponPivot.rotation.x) * Math.min(1, dt * 14);
+          this.weaponPivot.rotation.z += (0 - this.weaponPivot.rotation.z) * Math.min(1, dt * 14);
+        }
+      }
+    }
+
+    // =========================================================
+    // 5. 4000x4000 RUST-STYLE CHUNK WORLD, BARRELS & BUILDINGS
     // =========================================================
     class ChunkWorld {
       constructor(scene) {
         this.scene = scene;
-        this.worldHalf = 2000; // -2000 to +2000 = 4000x4000 meters
+        this.worldHalf = 2000;
         this.chunkSize = 80;
-        this.viewRadius = 2; // 5x5 chunks = 400m x 400m active around player
+        this.viewRadius = 2;
 
         this.chunks = new Map();
         this.colliders = [];
@@ -1035,40 +1445,30 @@
         this.playerStructures = [];
         this.particles = [];
 
-        this.setupMaterials();
+        this.setupPBRMaterials();
         this.buildSafeZoneHub();
       }
 
-      setupMaterials() {
-        const makeTex = (rgb, grain, rep) => {
-          const c = document.createElement('canvas');
-          c.width = 128; c.height = 128;
-          const ctx = c.getContext('2d');
-          ctx.fillStyle = `rgb(${rgb[0]},${rgb[1]},${rgb[2]})`;
-          ctx.fillRect(0, 0, 128, 128);
-          for (let i = 0; i < 900; i++) {
-            const d = (Math.random() - 0.5) * grain;
-            ctx.fillStyle = `rgb(${Math.max(0, Math.min(255, rgb[0] + d)) | 0},${Math.max(0, Math.min(255, rgb[1] + d)) | 0},${Math.max(0, Math.min(255, rgb[2] + d)) | 0})`;
-            ctx.fillRect(Math.random() * 128, Math.random() * 128, 3, 3);
-          }
-          const t = new THREE.CanvasTexture(c);
-          t.wrapS = THREE.RepeatWrapping;
-          t.wrapT = THREE.RepeatWrapping;
-          t.repeat.set(rep, rep);
-          return t;
-        };
+      setupPBRMaterials() {
+        const gPBR = PBRTextures.createPBRSet([72, 82, 60], 36, 16, 'noise');
+        const cPBR = PBRTextures.createPBRSet([52, 56, 62], 30, 16, 'concrete');
+        const wallPBR = PBRTextures.createPBRSet([102, 106, 104], 34, 3, 'concrete');
+        const barkPBR = PBRTextures.createPBRSet([82, 56, 36], 38, 2, 'wood');
+        const leafPBR = PBRTextures.createPBRSet([40, 76, 44], 34, 2, 'noise');
+        const rockPBR = PBRTextures.createPBRSet([108, 112, 118], 42, 2, 'concrete');
+        const barrelPBR = PBRTextures.createPBRSet([168, 46, 36], 35, 1, 'rust');
 
-        this.matGround = new THREE.MeshStandardMaterial({ map: makeTex([68, 76, 58], 35, 16), roughness: 0.95 });
-        this.matCityGround = new THREE.MeshStandardMaterial({ map: makeTex([48, 52, 56], 28, 16), roughness: 0.92 });
-        this.matConcrete = new THREE.MeshStandardMaterial({ map: makeTex([92, 98, 96], 30, 3), roughness: 0.88 });
-        this.matBark = new THREE.MeshStandardMaterial({ map: makeTex([76, 52, 34], 35, 2), roughness: 0.9 });
-        this.matLeaves = new THREE.MeshStandardMaterial({ map: makeTex([38, 72, 42], 32, 2), roughness: 0.85 });
-        this.matRock = new THREE.MeshStandardMaterial({ map: makeTex([104, 108, 114], 40, 2), roughness: 0.86 });
-        this.matOre = new THREE.MeshStandardMaterial({ color: 0x38bdf8, emissive: 0x0284c7, emissiveIntensity: 0.45, roughness: 0.3, metalness: 0.8 });
-        this.matLoot = new THREE.MeshStandardMaterial({ color: 0xd97706, emissive: 0x92400e, emissiveIntensity: 0.35, roughness: 0.4, metalness: 0.6 });
+        this.matGround = new THREE.MeshStandardMaterial({ map: gPBR.map, bumpMap: gPBR.bumpMap, bumpScale: 0.04, roughness: 0.94 });
+        this.matCityGround = new THREE.MeshStandardMaterial({ map: cPBR.map, bumpMap: cPBR.bumpMap, bumpScale: 0.03, roughness: 0.9 });
+        this.matConcrete = new THREE.MeshStandardMaterial({ map: wallPBR.map, bumpMap: wallPBR.bumpMap, bumpScale: 0.035, roughness: 0.86 });
+        this.matBark = new THREE.MeshStandardMaterial({ map: barkPBR.map, bumpMap: barkPBR.bumpMap, bumpScale: 0.03, roughness: 0.92 });
+        this.matLeaves = new THREE.MeshStandardMaterial({ map: leafPBR.map, bumpMap: leafPBR.bumpMap, bumpScale: 0.02, roughness: 0.84 });
+        this.matRock = new THREE.MeshStandardMaterial({ map: rockPBR.map, bumpMap: rockPBR.bumpMap, bumpScale: 0.04, roughness: 0.85 });
+        this.matOre = new THREE.MeshStandardMaterial({ color: 0x38bdf8, emissive: 0x0284c7, emissiveIntensity: 0.5, roughness: 0.25, metalness: 0.85 });
+        this.matBarrel = new THREE.MeshStandardMaterial({ map: barrelPBR.map, bumpMap: barrelPBR.bumpMap, bumpScale: 0.02, roughness: 0.48, metalness: 0.65 });
+        this.matMilCrate = new THREE.MeshStandardMaterial({ color: 0x3f6212, roughness: 0.55, metalness: 0.45 });
       }
 
-      // Deterministic PRNG per chunk
       rng(seed) {
         let s = seed | 0;
         return () => {
@@ -1083,30 +1483,27 @@
         const dist0 = Math.hypot(x, z);
         if (dist0 < 28) return 0;
         const blend = Math.min(1, (dist0 - 28) / 30);
-        const h =
-          Math.sin(x * 0.018) * Math.cos(z * 0.018) * 5.2 +
-          Math.sin(x * 0.045 + z * 0.035) * 1.8;
+        const h = Math.sin(x * 0.018) * Math.cos(z * 0.018) * 5.0 + Math.sin(x * 0.045 + z * 0.035) * 1.6;
         return Math.max(-1.5, h * blend);
       }
 
       getBiomeAt(x, z) {
-        if (Math.hypot(x, z) < 30) return 'SAFE ZONE';
+        if (Math.hypot(x, z) < 30) return 'SAFE ZONE (АЮУЛГҮЙ БҮС)';
         const val = Math.sin(x * 0.0045) + Math.cos(z * 0.0045);
-        if (val > 0.85) return 'ABANDONED CITY';
-        if (val < -0.85) return 'MOUNTAIN MINES & CAVES';
-        if (Math.sin(x * 0.009 - z * 0.007) > 0.35) return 'DENSE FOREST';
-        return 'WASTELAND VILLAGE';
+        if (val > 0.85) return 'ABANDONED CITY (ХАЯГДСАН ХОТ)';
+        if (val < -0.85) return 'MOUNTAIN MINES (УУЛЫН АГУЙ)';
+        if (Math.sin(x * 0.009 - z * 0.007) > 0.35) return 'DENSE FOREST (ӨТГӨН ОЙ)';
+        return 'RUST WASTELAND (ЭЗГҮЙ ТОСГОН)';
       }
 
       buildSafeZoneHub() {
-        // Starter Safe Zone Perimeter at (0, 0)
         const wall = (x, z, w, d) => {
           const m = new THREE.Mesh(new THREE.BoxGeometry(w, 3, d), this.matConcrete);
           m.position.set(x, 1.5, z);
           m.castShadow = true;
           m.receiveShadow = true;
           this.scene.add(m);
-          this.colliders.push({ minX: x - w / 2, maxX: x + w / 2, minY: 0, maxY: 3, minZ: z - d / 2, maxZ: z + d / 2, permanent: true });
+          this.colliders.push({ minX: x - w / 2, maxX: x + w / 2, minY: 0, maxY: 3, minZ: z - d / 2, maxZ: z + d / 2 });
         };
         wall(0, 16, 30, 0.8);
         wall(-15, 0, 0.8, 32);
@@ -1114,7 +1511,7 @@
         wall(-9, -16, 12, 0.8);
         wall(9, -16, 12, 0.8);
 
-        const beacon = new THREE.PointLight(0x34d399, 4, 28);
+        const beacon = new THREE.PointLight(0x84cc16, 4.5, 28);
         beacon.position.set(0, 4.5, -16);
         this.scene.add(beacon);
       }
@@ -1122,28 +1519,28 @@
       updateChunks(playerPos) {
         const pcx = Math.floor(playerPos.x / this.chunkSize);
         const pcz = Math.floor(playerPos.z / this.chunkSize);
-        const neededKeys = new Set();
+        const needed = new Set();
 
         for (let dx = -this.viewRadius; dx <= this.viewRadius; dx++) {
           for (let dz = -this.viewRadius; dz <= this.viewRadius; dz++) {
             const cx = pcx + dx;
             const cz = pcz + dz;
-            const centerX = (cx + 0.5) * this.chunkSize;
-            const centerZ = (cz + 0.5) * this.chunkSize;
-            if (Math.abs(centerX) > this.worldHalf || Math.abs(centerZ) > this.worldHalf) continue;
-
+            const midX = (cx + 0.5) * this.chunkSize;
+            const midZ = (cz + 0.5) * this.chunkSize;
+            if (Math.abs(midX) > this.worldHalf || Math.abs(midZ) > this.worldHalf) continue;
             const key = `${cx},${cz}`;
-            neededKeys.add(key);
-            if (!this.chunks.has(key)) {
-              this.loadChunk(cx, cz, key);
-            }
+            needed.add(key);
+            if (!this.chunks.has(key)) this.loadChunk(cx, cz, key);
           }
         }
 
-        // Unload distant chunks to keep mobile RAM low
         for (const [key, chunk] of this.chunks.entries()) {
-          if (!neededKeys.has(key)) {
-            this.unloadChunk(key, chunk);
+          if (!needed.has(key)) {
+            this.scene.remove(chunk.group);
+            this.colliders = this.colliders.filter((c) => !chunk.chunkColliders.includes(c));
+            this.gatherables = this.gatherables.filter((g) => !chunk.chunkGatherables.includes(g));
+            this.lootCrates = this.lootCrates.filter((l) => !chunk.chunkCrates.includes(l));
+            this.chunks.delete(key);
           }
         }
       }
@@ -1160,38 +1557,30 @@
         const midZ = startZ + this.chunkSize / 2;
         const biome = this.getBiomeAt(midX, midZ);
 
-        // 1. Chunk Terrain Patch
         const segs = 12;
         const geo = new THREE.PlaneGeometry(this.chunkSize, this.chunkSize, segs, segs);
         geo.rotateX(-Math.PI / 2);
         const pos = geo.attributes.position;
         for (let i = 0; i < pos.count; i++) {
-          const wx = pos.getX(i) + midX;
-          const wz = pos.getZ(i) + midZ;
-          pos.setY(i, this.getTerrainHeight(wx, wz));
+          pos.setY(i, this.getTerrainHeight(pos.getX(i) + midX, pos.getZ(i) + midZ));
         }
         geo.computeVertexNormals();
-        const ground = new THREE.Mesh(
-          geo,
-          biome === 'ABANDONED CITY' ? this.matCityGround : this.matGround
-        );
+        const ground = new THREE.Mesh(geo, biome.includes('CITY') ? this.matCityGround : this.matGround);
         ground.position.set(midX, 0, midZ);
         ground.receiveShadow = true;
         group.add(ground);
 
-        // Deterministic Random for this chunk
         const rand = this.rng(cx * 73856093 ^ cz * 19349663);
 
-        // Skip spawning obstacles inside Safe Zone center
         if (Math.hypot(midX, midZ) >= 24) {
-          // 2. Spawn Buildings in City / Village
-          const buildingCount = biome === 'ABANDONED CITY' ? 3 : biome === 'WASTELAND VILLAGE' ? 1 : 0;
-          for (let b = 0; b < buildingCount; b++) {
-            const bx = startX + 12 + rand() * (this.chunkSize - 24);
-            const bz = startZ + 12 + rand() * (this.chunkSize - 24);
+          // Buildings
+          const bCount = biome.includes('CITY') ? 3 : biome.includes('WASTELAND') ? 1 : 0;
+          for (let b = 0; b < bCount; b++) {
+            const bx = startX + 14 + rand() * (this.chunkSize - 28);
+            const bz = startZ + 14 + rand() * (this.chunkSize - 28);
             const bw = 9 + rand() * 8;
             const bd = 9 + rand() * 8;
-            const bh = biome === 'ABANDONED CITY' ? 10 + rand() * 14 : 4.5 + rand() * 3;
+            const bh = biome.includes('CITY') ? 10 + rand() * 14 : 4.8 + rand() * 3;
             const by = this.getTerrainHeight(bx, bz);
 
             const bMesh = new THREE.Mesh(new THREE.BoxGeometry(bw, bh, bd), this.matConcrete);
@@ -1204,67 +1593,55 @@
             chunkColliders.push(col);
             this.colliders.push(col);
 
-            // Spawn a Loot Crate beside every building
-            this.spawnLootCrate(bx + bw / 2 + 1.4, bz, group, chunkCrates);
+            this.spawnRustLoot(bx + bw / 2 + 1.5, bz, true, group, chunkCrates);
           }
 
-          // 3. Spawn Trees
-          const treeCount = biome === 'DENSE FOREST' ? 12 : biome === 'ABANDONED CITY' ? 2 : 5;
-          for (let t = 0; t < treeCount; t++) {
+          // Multi-layered Pine Trees
+          const tCount = biome.includes('FOREST') ? 12 : biome.includes('CITY') ? 2 : 5;
+          for (let t = 0; t < tCount; t++) {
             const tx = startX + 4 + rand() * (this.chunkSize - 8);
             const tz = startZ + 4 + rand() * (this.chunkSize - 8);
             const ty = this.getTerrainHeight(tx, tz);
-            const sc = 0.8 + rand() * 0.5;
+            const sc = 0.85 + rand() * 0.5;
 
             const tree = new THREE.Group();
             tree.position.set(tx, ty, tz);
-            const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.24 * sc, 0.35 * sc, 3.2 * sc, 6), this.matBark);
-            trunk.position.y = 1.6 * sc;
+            const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.22 * sc, 0.36 * sc, 3.4 * sc, 7), this.matBark);
+            trunk.position.y = 1.7 * sc;
             trunk.castShadow = true;
             tree.add(trunk);
 
-            const crown = new THREE.Mesh(new THREE.ConeGeometry(1.7 * sc, 3.8 * sc, 6), this.matLeaves);
-            crown.position.y = 4.2 * sc;
-            crown.castShadow = true;
-            tree.add(crown);
+            for (let layer = 0; layer < 3; layer++) {
+              const cone = new THREE.Mesh(new THREE.ConeGeometry((1.85 - layer * 0.42) * sc, 2.5 * sc, 7), this.matLeaves);
+              cone.position.y = (3.4 + layer * 1.2) * sc;
+              cone.castShadow = true;
+              tree.add(cone);
+            }
             group.add(tree);
 
             const col = { minX: tx - 0.45, maxX: tx + 0.45, minY: ty, maxY: ty + 5, minZ: tz - 0.45, maxZ: tz + 0.45 };
             chunkColliders.push(col);
             this.colliders.push(col);
 
-            const gItem = {
-              type: 'wood',
-              label: 'Мод (Wood)',
-              mesh: tree,
-              hitTarget: trunk,
-              collider: col,
-              pos: new THREE.Vector3(tx, ty + 1.4, tz),
-              hp: 60,
-              maxHp: 60
-            };
+            const gItem = { type: 'wood', label: 'Мод (Wood)', mesh: tree, hitTarget: trunk, collider: col, pos: new THREE.Vector3(tx, ty + 1.4, tz), hp: 60, maxHp: 60 };
             chunkGatherables.push(gItem);
             this.gatherables.push(gItem);
           }
 
-          // 4. Spawn Rocks & Ores
-          const rockCount = biome === 'MOUNTAIN MINES & CAVES' ? 8 : 3;
-          for (let r = 0; r < rockCount; r++) {
+          // Rocks & Ores
+          const rCount = biome.includes('MOUNTAIN') ? 8 : 3;
+          for (let r = 0; r < rCount; r++) {
             const rx = startX + 5 + rand() * (this.chunkSize - 10);
             const rz = startZ + 5 + rand() * (this.chunkSize - 10);
             const ry = this.getTerrainHeight(rx, rz);
-            const oreRoll = rand();
-            let resType = 'stone';
-            let resLabel = 'Чулуу (Stone)';
-            if (oreRoll > 0.72) { resType = 'titanium_ore'; resLabel = 'Титан Хүдэр'; }
-            else if (oreRoll > 0.48) { resType = 'iron_ore'; resLabel = 'Төмрийн Хүдэр'; }
-            else if (oreRoll > 0.34) { resType = 'sulfur'; resLabel = 'Хүхэр (Sulfur)'; }
-            else if (oreRoll > 0.22) { resType = 'copper_ore'; resLabel = 'Зэсийн Хүдэр'; }
+            const roll = rand();
+            let resType = 'stone', resLabel = 'Чулуу (Stone)';
+            if (roll > 0.72) { resType = 'titanium_ore'; resLabel = 'Титан Хүдэр'; }
+            else if (roll > 0.48) { resType = 'iron_ore'; resLabel = 'Төмрийн Хүдэр'; }
+            else if (roll > 0.34) { resType = 'sulfur'; resLabel = 'Хүхэр (Sulfur)'; }
+            else if (roll > 0.22) { resType = 'copper_ore'; resLabel = 'Зэсийн Хүдэр'; }
 
-            const rock = new THREE.Mesh(
-              new THREE.DodecahedronGeometry(1.05, 0),
-              resType === 'stone' ? this.matRock : this.matOre
-            );
+            const rock = new THREE.Mesh(new THREE.DodecahedronGeometry(1.05, 0), resType === 'stone' ? this.matRock : this.matOre);
             rock.position.set(rx, ry + 0.65, rz);
             rock.castShadow = true;
             group.add(rock);
@@ -1273,51 +1650,38 @@
             chunkColliders.push(col);
             this.colliders.push(col);
 
-            const gItem = {
-              type: resType,
-              label: resLabel,
-              mesh: rock,
-              hitTarget: rock,
-              collider: col,
-              pos: new THREE.Vector3(rx, ry + 0.7, rz),
-              hp: 75,
-              maxHp: 75
-            };
+            const gItem = { type: resType, label: resLabel, mesh: rock, hitTarget: rock, collider: col, pos: new THREE.Vector3(rx, ry + 0.7, rz), hp: 75, maxHp: 75 };
             chunkGatherables.push(gItem);
             this.gatherables.push(gItem);
           }
 
-          // 5. Random Wilderness Loot Crate
-          if (rand() > 0.45) {
-            this.spawnLootCrate(midX + (rand() - 0.5) * 30, midZ + (rand() - 0.5) * 30, group, chunkCrates);
+          // Rust Red Barrels & Military Crates
+          this.spawnRustLoot(midX + (rand() - 0.5) * 35, midZ + (rand() - 0.5) * 35, false, group, chunkCrates);
+          if (rand() > 0.4) {
+            this.spawnRustLoot(midX + (rand() - 0.5) * 35, midZ + (rand() - 0.5) * 35, true, group, chunkCrates);
           }
         } else {
-          // Starter Loot Crate inside Safe Zone
-          this.spawnLootCrate(5, -5, group, chunkCrates);
+          // Starter Rust Barrel & Military Crate inside Safe Zone
+          this.spawnRustLoot(4.5, -5, true, group, chunkCrates);
+          this.spawnRustLoot(-4.5, -5, false, group, chunkCrates);
         }
 
         this.scene.add(group);
         this.chunks.set(key, { group, chunkColliders, chunkGatherables, chunkCrates });
       }
 
-      spawnLootCrate(x, z, parentGroup, chunkCrates) {
+      spawnRustLoot(x, z, isCrate, parentGroup, chunkCrates) {
         const y = this.getTerrainHeight(x, z);
-        const crate = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.85, 0.85), this.matLoot);
-        crate.position.set(x, y + 0.42, z);
-        crate.castShadow = true;
-        parentGroup.add(crate);
+        const mesh = isCrate
+          ? new THREE.Mesh(new THREE.BoxGeometry(1.15, 0.75, 0.8), this.matMilCrate)
+          : new THREE.Mesh(new THREE.CylinderGeometry(0.38, 0.38, 1.15, 12), this.matBarrel);
+        mesh.position.set(x, y + (isCrate ? 0.38 : 0.58), z);
+        mesh.castShadow = true;
+        parentGroup.add(mesh);
 
-        const data = { mesh: crate, pos: new THREE.Vector3(x, y + 0.5, z), opened: false };
+        const data = { mesh, isCrate, pos: new THREE.Vector3(x, y + 0.5, z), opened: false };
         chunkCrates.push(data);
         this.lootCrates.push(data);
-      }
-
-      unloadChunk(key, chunk) {
-        this.scene.remove(chunk.group);
-        this.colliders = this.colliders.filter((c) => !chunk.chunkColliders.includes(c));
-        this.gatherables = this.gatherables.filter((g) => !chunk.chunkGatherables.includes(g));
-        this.lootCrates = this.lootCrates.filter((l) => !chunk.chunkCrates.includes(l));
-        this.chunks.delete(key);
       }
 
       placePlayerBuilding(pos, yaw, itemDef) {
@@ -1326,14 +1690,19 @@
         const bz = Math.round(pos.z / grid) * grid;
         const by = this.getTerrainHeight(bx, bz);
 
-        const mesh = new THREE.Mesh(
-          new THREE.BoxGeometry(itemDef.w, itemDef.h, itemDef.d),
-          new THREE.MeshStandardMaterial({ color: itemDef.color, roughness: 0.75, metalness: 0.25 })
-        );
+        const woodPBR = PBRTextures.createPBRSet([122, 82, 46], 35, 2, 'wood');
+        const mat = new THREE.MeshStandardMaterial({
+          color: itemDef.color,
+          map: woodPBR.map,
+          bumpMap: woodPBR.bumpMap,
+          bumpScale: 0.025,
+          roughness: 0.78,
+          metalness: 0.2
+        });
+
+        const mesh = new THREE.Mesh(new THREE.BoxGeometry(itemDef.w, itemDef.h, itemDef.d), mat);
         mesh.position.set(bx, by + itemDef.h / 2, bz);
-        // Snap rotation to 90 degrees
-        const snappedRot = Math.round(yaw / (Math.PI / 2)) * (Math.PI / 2);
-        mesh.rotation.y = snappedRot;
+        mesh.rotation.y = yaw;
         mesh.castShadow = true;
         mesh.receiveShadow = true;
         this.scene.add(mesh);
@@ -1360,13 +1729,13 @@
       spawnBurst(pos, hex) {
         const mat = new THREE.MeshBasicMaterial({ color: hex });
         const geo = new THREE.BoxGeometry(0.14, 0.14, 0.14);
-        for (let i = 0; i < 6; i++) {
+        for (let i = 0; i < 7; i++) {
           const p = new THREE.Mesh(geo, mat);
           p.position.copy(pos);
           this.scene.add(p);
           this.particles.push({
             mesh: p,
-            vel: new THREE.Vector3((Math.random() - 0.5) * 4, 2 + Math.random() * 3, (Math.random() - 0.5) * 4),
+            vel: new THREE.Vector3((Math.random() - 0.5) * 4.5, 2 + Math.random() * 3.5, (Math.random() - 0.5) * 4.5),
             life: 0.45
           });
         }
@@ -1385,15 +1754,14 @@
           }
         }
 
-        // Auto-Turrets shoot nearby zombies automatically
         for (const st of this.playerStructures) {
           if (!st.isTurret) continue;
           st.cooldown -= dt;
           if (st.cooldown <= 0 && zombieMgr.zombies.length > 0) {
-            const target = zombieMgr.findNearest(st.pos, 22);
+            const target = zombieMgr.findNearest(st.pos, 24);
             if (target) {
-              st.cooldown = 0.6;
-              zombieMgr.damageZombie(target, 45);
+              st.cooldown = 0.55;
+              zombieMgr.damageZombie(target, 50);
               this.spawnBurst(target.group.position.clone().add(new THREE.Vector3(0, 1.2, 0)), 0xfacc15);
             }
           }
@@ -1402,76 +1770,109 @@
     }
 
     // =========================================================
-    // 3. 20 ZOMBIES + 20 BOSS ZOMBIES AI & COMBAT MANAGER
+    // 6. ARTICULATED HUMANOID ZOMBIE & BOSS RIGS + AI
     // =========================================================
     class ZombieManager {
       constructor(scene, world) {
         this.scene = scene;
         this.world = world;
         this.zombies = [];
+        this.dyingZombies = [];
         this.spawnTimer = 0;
-        this.bossTimer = 18; // First Boss spawns shortly after leaving Safe Zone
+        this.bossTimer = 16;
       }
 
-      createZombieMesh(def, isBoss) {
+      createArticulatedZombie(def, isBoss) {
         const group = new THREE.Group();
         const s = def.scale;
 
-        const bodyMat = new THREE.MeshStandardMaterial({ color: def.bodyCol, roughness: 0.85 });
-        const skinMat = new THREE.MeshStandardMaterial({ color: 0x6b7280, roughness: 0.9 });
+        const clothMat = new THREE.MeshStandardMaterial({ color: def.bodyCol, roughness: 0.88 });
+        const skinMat = new THREE.MeshStandardMaterial({ color: def.skinCol, roughness: 0.82 });
+        const bootMat = new THREE.MeshStandardMaterial({ color: 0x18181b, roughness: 0.9 });
         const eyeMat = new THREE.MeshBasicMaterial({ color: def.eyeCol });
 
-        // Torso
-        const torso = new THREE.Mesh(new THREE.BoxGeometry(0.62 * s, 0.85 * s, 0.34 * s), bodyMat);
-        torso.position.y = 1.05 * s;
+        // Legs (Articulated for realistic running stride)
+        const legGeo = new THREE.BoxGeometry(0.18 * s, 0.72 * s, 0.2 * s);
+        const leftLeg = new THREE.Group();
+        leftLeg.position.set(-0.16 * s, 0.74 * s, 0);
+        const lShin = new THREE.Mesh(legGeo, bootMat);
+        lShin.position.y = -0.36 * s;
+        lShin.castShadow = true;
+        leftLeg.add(lShin);
+
+        const rightLeg = new THREE.Group();
+        rightLeg.position.set(0.16 * s, 0.74 * s, 0);
+        const rShin = new THREE.Mesh(legGeo, bootMat);
+        rShin.position.y = -0.36 * s;
+        rShin.castShadow = true;
+        rightLeg.add(rShin);
+        group.add(leftLeg, rightLeg);
+
+        // Torso + Tattered Armor / Ribs
+        const torso = new THREE.Mesh(new THREE.BoxGeometry(0.56 * s, 0.78 * s, 0.3 * s), clothMat);
+        torso.position.y = 1.12 * s;
+        torso.rotation.x = 0.14; // Hunched zombie posture
         torso.castShadow = true;
         group.add(torso);
 
-        // Head
-        const head = new THREE.Mesh(new THREE.BoxGeometry(0.42 * s, 0.42 * s, 0.42 * s), skinMat);
-        head.position.y = 1.72 * s;
-        head.castShadow = true;
-        group.add(head);
+        // Sculpted Head + Jaw + Glowing Sunken Eyes
+        const headGroup = new THREE.Group();
+        headGroup.position.set(0, 1.68 * s, 0.08 * s);
+        const cranium = new THREE.Mesh(new THREE.BoxGeometry(0.36 * s, 0.36 * s, 0.38 * s), skinMat);
+        cranium.castShadow = true;
+        const jaw = new THREE.Mesh(new THREE.BoxGeometry(0.28 * s, 0.12 * s, 0.3 * s), skinMat);
+        jaw.position.set(0, -0.2 * s, 0.03 * s);
 
-        // Glowing Eyes
-        const eyeGeo = new THREE.BoxGeometry(0.08 * s, 0.06 * s, 0.05 * s);
+        const eyeGeo = new THREE.SphereGeometry(0.038 * s, 8, 8);
         const eyeL = new THREE.Mesh(eyeGeo, eyeMat);
-        eyeL.position.set(-0.1 * s, 1.75 * s, 0.21 * s);
+        eyeL.position.set(-0.09 * s, 0.03 * s, 0.19 * s);
         const eyeR = new THREE.Mesh(eyeGeo, eyeMat);
-        eyeR.position.set(0.1 * s, 1.75 * s, 0.21 * s);
-        group.add(eyeL, eyeR);
+        eyeR.position.set(0.09 * s, 0.03 * s, 0.19 * s);
+        headGroup.add(cranium, jaw, eyeL, eyeR);
+        group.add(headGroup);
 
-        // Outstretched Zombie Arms
-        const armGeo = new THREE.BoxGeometry(0.18 * s, 0.18 * s, 0.72 * s);
-        const armL = new THREE.Mesh(armGeo, skinMat);
-        armL.position.set(-0.42 * s, 1.28 * s, 0.32 * s);
-        const armR = new THREE.Mesh(armGeo, skinMat);
-        armR.position.set(0.42 * s, 1.28 * s, 0.32 * s);
-        group.add(armL, armR);
+        // Outstretched Clawing Arms
+        const armGeo = new THREE.BoxGeometry(0.15 * s, 0.15 * s, 0.68 * s);
+        const leftArm = new THREE.Group();
+        leftArm.position.set(-0.38 * s, 1.38 * s, 0.05 * s);
+        const lArmMesh = new THREE.Mesh(armGeo, skinMat);
+        lArmMesh.position.z = 0.3 * s;
+        lArmMesh.castShadow = true;
+        leftArm.add(lArmMesh);
 
-        // Boss Crown / Spikes + Aura Light
+        const rightArm = new THREE.Group();
+        rightArm.position.set(0.38 * s, 1.38 * s, 0.05 * s);
+        const rArmMesh = new THREE.Mesh(armGeo, skinMat);
+        rArmMesh.position.z = 0.3 * s;
+        rArmMesh.castShadow = true;
+        rightArm.add(rArmMesh);
+        group.add(leftArm, rightArm);
+
+        // Boss Spikes, Crown & Eerie Light Aura
         if (isBoss) {
-          const crown = new THREE.Mesh(
-            new THREE.ConeGeometry(0.35 * s, 0.55 * s, 5),
-            new THREE.MeshBasicMaterial({ color: def.eyeCol })
-          );
-          crown.position.y = 2.15 * s;
-          group.add(crown);
+          const spikeMat = new THREE.MeshStandardMaterial({ color: def.eyeCol, emissive: def.eyeCol, emissiveIntensity: 0.6 });
+          const spikeL = new THREE.Mesh(new THREE.ConeGeometry(0.14 * s, 0.55 * s, 5), spikeMat);
+          spikeL.position.set(-0.36 * s, 1.65 * s, 0);
+          spikeL.rotation.z = 0.45;
+          const spikeR = new THREE.Mesh(new THREE.ConeGeometry(0.14 * s, 0.55 * s, 5), spikeMat);
+          spikeR.position.set(0.36 * s, 1.65 * s, 0);
+          spikeR.rotation.z = -0.45;
+          group.add(spikeL, spikeR);
 
-          const aura = new THREE.PointLight(def.eyeCol, 3.5, 14);
+          const aura = new THREE.PointLight(def.eyeCol, 4.0, 16);
           aura.position.y = 1.8 * s;
           group.add(aura);
         }
 
-        // Invisible Hitbox for Easy Raycast Aiming
+        // Invisible Hitbox for Accurate Shooting & Melee
         const hitbox = new THREE.Mesh(
-          new THREE.BoxGeometry(0.95 * s, 2.1 * s, 0.95 * s),
+          new THREE.BoxGeometry(0.95 * s, 2.05 * s, 0.95 * s),
           new THREE.MeshBasicMaterial({ visible: false })
         );
-        hitbox.position.y = 1.05 * s;
+        hitbox.position.y = 1.02 * s;
         group.add(hitbox);
 
-        return { group, hitbox, armL, armR };
+        return { group, hitbox, leftArm, rightArm, leftLeg, rightLeg, headGroup };
       }
 
       spawnZombie(playerPos, isBoss = false) {
@@ -1479,15 +1880,13 @@
         const def = pool[Math.floor(Math.random() * pool.length)];
 
         const angle = Math.random() * Math.PI * 2;
-        const dist = isBoss ? 34 : 22 + Math.random() * 35;
+        const dist = isBoss ? 32 : 20 + Math.random() * 34;
         const sx = Math.max(-1980, Math.min(1980, playerPos.x + Math.cos(angle) * dist));
         const sz = Math.max(-1980, Math.min(1980, playerPos.z + Math.sin(angle) * dist));
-
-        // Never spawn inside Safe Zone
-        if (Math.hypot(sx, sz) < 22) return null;
+        if (Math.hypot(sx, sz) < 21) return null;
 
         const sy = this.world.getTerrainHeight(sx, sz);
-        const rig = this.createZombieMesh(def, isBoss);
+        const rig = this.createArticulatedZombie(def, isBoss);
         rig.group.position.set(sx, sy, sz);
         this.scene.add(rig.group);
 
@@ -1496,10 +1895,7 @@
           isBoss,
           hp: def.hp,
           maxHp: def.hp,
-          group: rig.group,
-          hitbox: rig.hitbox,
-          armL: rig.armL,
-          armR: rig.armR,
+          ...rig,
           attackCooldown: 0,
           animTimer: Math.random() * 10
         };
@@ -1508,45 +1904,54 @@
       }
 
       findNearest(pos, maxDist) {
-        let best = null;
-        let bestD = maxDist;
+        let best = null, bestD = maxDist;
         for (const z of this.zombies) {
           const d = z.group.position.distanceTo(pos);
-          if (d < bestD) {
-            bestD = d;
-            best = z;
-          }
+          if (d < bestD) { bestD = d; best = z; }
         }
         return best;
       }
 
       damageZombie(z, amount) {
         z.hp -= amount;
-        this.world.spawnBurst(z.group.position.clone().add(new THREE.Vector3(0, 1.2 * z.def.scale, 0)), 0xdc2626);
+        this.world.spawnBurst(z.group.position.clone().add(new THREE.Vector3(0, 1.2 * z.def.scale, 0)), 0xb91c1c);
+        // Hit stagger
+        z.headGroup.rotation.x = -0.35;
+        setTimeout(() => { if (z.headGroup) z.headGroup.rotation.x = 0; }, 120);
+
         if (z.hp <= 0) {
-          this.scene.remove(z.group);
           this.zombies = this.zombies.filter((item) => item !== z);
-          return true; // Killed
+          this.dyingZombies.push({ group: z.group, timer: 0.9 });
+          return true;
         }
         return false;
       }
 
       update(dt, playerPos, onPlayerHit, onBossAlert) {
-        const playerInSafeZone = Math.hypot(playerPos.x, playerPos.z) < 17;
+        // Animate dying zombies falling backward
+        for (let i = this.dyingZombies.length - 1; i >= 0; i--) {
+          const dz = this.dyingZombies[i];
+          dz.timer -= dt;
+          dz.group.rotation.x = Math.max(-Math.PI / 2, dz.group.rotation.x - dt * 4.5);
+          if (dz.timer <= 0) {
+            this.scene.remove(dz.group);
+            this.dyingZombies.splice(i, 1);
+          }
+        }
 
-        // Maintain up to 18 active zombies nearby
+        const inSafeZone = Math.hypot(playerPos.x, playerPos.z) < 17;
+
         this.spawnTimer -= dt;
-        if (this.spawnTimer <= 0 && this.zombies.length < 18 && !playerInSafeZone) {
-          this.spawnTimer = 2.2;
+        if (this.spawnTimer <= 0 && this.zombies.length < 18 && !inSafeZone) {
+          this.spawnTimer = 2.0;
           this.spawnZombie(playerPos, false);
         }
 
-        // Spawn one of the 20 Boss Zombies periodically
         const hasBoss = this.zombies.some((z) => z.isBoss);
-        if (!hasBoss && !playerInSafeZone) {
+        if (!hasBoss && !inSafeZone) {
           this.bossTimer -= dt;
           if (this.bossTimer <= 0) {
-            this.bossTimer = 45;
+            this.bossTimer = 42;
             const boss = this.spawnZombie(playerPos, true);
             if (boss && onBossAlert) onBossAlert(boss);
           }
@@ -1557,39 +1962,43 @@
           const zPos = z.group.position;
           const dist = zPos.distanceTo(playerPos);
 
-          // Despawn if too far away
-          if (dist > 110) {
+          if (dist > 115) {
             this.scene.remove(z.group);
             this.zombies.splice(i, 1);
             continue;
           }
 
-          // Safe zone repels zombies
           if (Math.hypot(zPos.x, zPos.z) < 18) {
             zPos.x += (zPos.x >= 0 ? 1 : -1) * 4 * dt;
             continue;
           }
 
-          // Face player & chase
           const dx = playerPos.x - zPos.x;
           const dz = playerPos.z - zPos.z;
           z.group.rotation.y = Math.atan2(dx, dz);
 
           const reach = 1.65 * z.def.scale;
           if (dist > reach) {
-            const nx = dx / dist;
-            const nz = dz / dist;
-            zPos.x += nx * z.def.speed * dt;
-            zPos.z += nz * z.def.speed * dt;
+            zPos.x += (dx / dist) * z.def.speed * dt;
+            zPos.z += (dz / dist) * z.def.speed * dt;
             zPos.y = this.world.getTerrainHeight(zPos.x, zPos.z);
 
-            z.animTimer += dt * z.def.speed * 2.5;
-            z.armL.rotation.x = Math.sin(z.animTimer) * 0.25;
-            z.armR.rotation.x = -Math.sin(z.animTimer) * 0.25;
+            z.animTimer += dt * z.def.speed * 3.2;
+            const stride = Math.sin(z.animTimer) * 0.55;
+            z.leftLeg.rotation.x = stride;
+            z.rightLeg.rotation.x = -stride;
+            z.leftArm.rotation.x = Math.sin(z.animTimer) * 0.22;
+            z.rightArm.rotation.x = -Math.sin(z.animTimer) * 0.22;
           } else {
             z.attackCooldown -= dt;
             if (z.attackCooldown <= 0) {
-              z.attackCooldown = 1.15;
+              z.attackCooldown = 1.1;
+              // Lunge arms forward on attack
+              z.leftArm.rotation.x = -0.75;
+              z.rightArm.rotation.x = -0.75;
+              setTimeout(() => {
+                if (z.leftArm) { z.leftArm.rotation.x = 0; z.rightArm.rotation.x = 0; }
+              }, 220);
               onPlayerHit(z.def.dmg, z.def.name);
             }
           }
@@ -1598,131 +2007,104 @@
     }
 
     // =========================================================
-    // 4. PLAYER, HOTBAR, INVENTORY & COMBAT CONTROLLER
+    // 7. PLAYER SYSTEM (FIXED ITEM USAGE, ARMOR, ADS & COMBAT)
     // =========================================================
     class PlayerSystem {
-      constructor(camera, scene, world, zombieMgr) {
+      constructor(camera, scene, world, zombieMgr, sfx) {
         this.camera = camera;
         this.scene = scene;
         this.world = world;
         this.zombieMgr = zombieMgr;
+        this.sfx = sfx;
 
-        // Position inside Safe Zone
         this.pos = new THREE.Vector3(0, 0, 5);
         this.vel = new THREE.Vector3(0, 0, 0);
         this.yaw = 0;
         this.pitch = 0;
         this.radius = 0.42;
-        this.height = 1.72;
         this.isGrounded = false;
-        this.isCrouching = false;
+        this.isADS = false;
+        this.buildYawOffset = 0;
 
-        // Survival Stats
         this.hp = 100;
         this.maxHp = 100;
         this.hunger = 100;
         this.thirst = 100;
         this.armor = 0;
 
-        // Inventory Map: itemId -> count
+        // Starter Rust Survival Kit (Ready to test immediately)
         this.inventory = {
+          gun_ak_0: 1,
+          ammo_762: 90,
           tool_stone_axe: 1,
           tool_stone_pick: 1,
-          gun_pistol_0: 1,
-          ammo_9mm: 60,
-          bandage: 4,
-          build_wood_plank_wall: 6,
-          wood: 12,
-          stone: 10
+          bandage: 5,
+          cooked_meat: 4,
+          clean_water: 4,
+          build_wood_plank_wall: 8,
+          build_steel_ingot_turret: 1,
+          wood: 15,
+          stone: 15
         };
 
-        // 8-Slot Hotbar (itemId or null)
         this.hotbar = [
-          'gun_pistol_0',
+          'gun_ak_0',
           'tool_stone_axe',
           'tool_stone_pick',
           'bandage',
+          'cooked_meat',
+          'clean_water',
           'build_wood_plank_wall',
-          null,
-          null,
-          null
+          'build_steel_ingot_turret'
         ];
         this.selectedSlot = 0;
-        this.magAmmo = {}; // gunId -> loaded bullets
+        this.magAmmo = { gun_ak_0: 30 };
         this.fireCooldown = 0;
-        this.swingTimer = 0;
+        this.swingProgress = 0;
+        this.isSwinging = false;
 
         this.raycaster = new THREE.Raycaster();
         this.tracers = [];
 
-        this.setupHeldRig();
-        this.refreshHeldModel();
-      }
-
-      setupHeldRig() {
-        this.rig = new THREE.Group();
-        this.heldAnchor = new THREE.Group();
-        this.heldAnchor.position.set(0.3, -0.26, -0.46);
-        this.rig.add(this.heldAnchor);
-
-        this.flashlight = new THREE.SpotLight(0xfff4d8, 3.2, 48, Math.PI / 4.2, 0.4, 1.0);
+        this.viewmodel = new FirstPersonViewmodel(this.camera);
+        this.flashlight = new THREE.SpotLight(0xfff4d8, 3.2, 52, Math.PI / 4.2, 0.4, 1.0);
         this.flashlight.position.set(-0.2, -0.1, -0.2);
         this.flashlight.target.position.set(0, -0.1, -14);
-        this.rig.add(this.flashlight, this.flashlight.target);
-
-        this.camera.add(this.rig);
+        this.camera.add(this.flashlight, this.flashlight.target);
         this.scene.add(this.camera);
 
-        // Translucent Ghost Box for Base Building Placement
         this.buildGhost = new THREE.Mesh(
           new THREE.BoxGeometry(3, 3, 0.4),
-          new THREE.MeshBasicMaterial({ color: 0x34d399, transparent: true, opacity: 0.42, wireframe: false })
+          new THREE.MeshBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.42 })
         );
         this.buildGhost.visible = false;
         this.scene.add(this.buildGhost);
+
+        this.refreshEquipped();
       }
 
       getEquippedItem() {
         const id = this.hotbar[this.selectedSlot];
-        if (!id || !this.inventory[id]) return null;
+        if (!id || !this.inventory[id] || this.inventory[id] <= 0) return null;
         return GameCatalog.items[id] || null;
       }
 
-      refreshHeldModel() {
-        while (this.heldAnchor.children.length > 0) {
-          this.heldAnchor.remove(this.heldAnchor.children[0]);
-        }
+      refreshEquipped() {
         const item = this.getEquippedItem();
-        if (!item) return;
-
-        const mat = new THREE.MeshStandardMaterial({ color: item.color || 0x94a3b8, roughness: 0.4, metalness: 0.6 });
-        if (item.type === 'gun') {
-          const body = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.12, 0.45), mat);
-          const grip = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.15, 0.08), mat);
-          grip.position.set(0, -0.1, 0.12);
-          this.heldAnchor.add(body, grip);
-        } else if (item.type === 'building') {
-          const block = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.22, 0.22), mat);
-          this.heldAnchor.add(block);
-        } else {
-          // Tool / Melee / Consumable
-          const stick = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.45, 0.06), mat);
-          stick.rotation.x = -0.35;
-          this.heldAnchor.add(stick);
-        }
+        if (!item || item.type !== 'gun') this.isADS = false;
+        this.viewmodel.setEquippedModel(item);
       }
 
       addItem(id, qty = 1) {
         this.inventory[id] = (this.inventory[id] || 0) + qty;
         const item = GameCatalog.items[id];
-        // Auto-assign to empty hotbar slot if equippable
         if (item && ['gun', 'melee', 'tool', 'building', 'consumable'].includes(item.type)) {
           if (!this.hotbar.includes(id)) {
             const emptyIdx = this.hotbar.indexOf(null);
             if (emptyIdx !== -1) this.hotbar[emptyIdx] = id;
           }
         }
-        this.refreshHeldModel();
+        this.refreshEquipped();
       }
 
       removeItem(id, qty = 1) {
@@ -1733,7 +2115,39 @@
           const hIdx = this.hotbar.indexOf(id);
           if (hIdx !== -1) this.hotbar[hIdx] = null;
         }
-        this.refreshHeldModel();
+        this.refreshEquipped();
+        return true;
+      }
+
+      // Direct Use / Equip from Inventory Bag OR Hotbar
+      useOrEquipItemById(id, onToast) {
+        const item = GameCatalog.items[id];
+        if (!item || !this.inventory[id]) return false;
+
+        if (item.type === 'consumable') {
+          this.hp = Math.min(this.maxHp, Math.max(1, this.hp + (item.hp || 0)));
+          this.hunger = Math.min(100, Math.max(0, this.hunger + (item.hunger || 0)));
+          this.thirst = Math.min(100, Math.max(0, this.thirst + (item.thirst || 0)));
+          this.removeItem(id, 1);
+          this.sfx.playUseItem();
+          onToast(`✨ ${item.name} хэрэглэлээ!`);
+          return true;
+        }
+
+        if (item.type === 'armor') {
+          this.armor = Math.min(100, this.armor + (item.defense || 10));
+          this.maxHp = 100 + this.armor;
+          this.hp = Math.min(this.maxHp, this.hp + (item.defense || 10));
+          this.removeItem(id, 1);
+          this.sfx.playUseItem();
+          onToast(`🦺 ${item.name} өмслөө! (Armor: ${this.armor})`);
+          return true;
+        }
+
+        // Otherwise equip to active hotbar slot
+        this.hotbar[this.selectedSlot] = id;
+        this.refreshEquipped();
+        onToast(`✋ Гарт барилаа: ${item.name}`);
         return true;
       }
 
@@ -1746,63 +2160,85 @@
 
         const avail = this.inventory[item.ammoType] || 0;
         if (avail <= 0) {
-          onToast('❌ Сум дууссан байна! (Craft хийнэ үү)');
+          onToast('❌ Сум дууссан! (520 Craft цэснээс сум хийнэ үү)');
           return;
         }
         const load = Math.min(needed, avail);
         this.removeItem(item.ammoType, load);
         this.magAmmo[item.id] = current + load;
+        this.sfx.playReload();
         onToast(`🔄 Цэнэглэлээ (+${load} сум)`);
       }
 
-      useEquipped(onToast, onZombieKilled) {
+      // Called on single tap OR while holding down FIRE/ACTION button
+      useActiveItem(isContinuousHold, onToast, onZombieKilled) {
         const item = this.getEquippedItem();
+
+        // Bare hands punch
         if (!item) {
-          // Bare hands punch
-          this.swingTimer = 0.25;
-          this.performMeleeOrGather(18, onToast, onZombieKilled);
+          if (this.isSwinging) return;
+          this.isSwinging = true;
+          this.swingProgress = 0.01;
+          this.performMeleeOrGather(20, onToast, onZombieKilled);
           return;
         }
 
+        // 1. Gun Fire
         if (item.type === 'gun') {
+          if (isContinuousHold && !item.auto) return; // Semi-auto requires tap
           if (this.fireCooldown > 0) return;
+
           if (this.magAmmo[item.id] === undefined) this.magAmmo[item.id] = item.magSize;
           if (this.magAmmo[item.id] <= 0) {
-            this.reloadGun(onToast);
+            if (!isContinuousHold) this.reloadGun(onToast);
             return;
           }
+
           this.magAmmo[item.id]--;
           this.fireCooldown = item.fireRate;
-          this.heldAnchor.position.z = -0.36; // Recoil kick
-          this.pitch += 0.015; // Vertical recoil
-          this.fireBullet(item.damage, onToast, onZombieKilled);
-        } else if (item.type === 'melee' || item.type === 'tool') {
-          if (this.swingTimer > 0) return;
-          this.swingTimer = 0.28;
-          this.performMeleeOrGather(item.damage || item.power || 25, onToast, onZombieKilled);
-        } else if (item.type === 'building') {
+          this.viewmodel.triggerRecoil(true);
+          this.pitch += this.isADS ? 0.008 : 0.015;
+          this.sfx.playGunshot(item.gunClass === 'sniper' ? 0.7 : 1.05);
+          this.fireBullet(item.damage, onZombieKilled);
+          return;
+        }
+
+        // 2. Melee / Tool (Supports holding button to keep chopping/mining!)
+        if (item.type === 'melee' || item.type === 'tool') {
+          if (this.isSwinging) return;
+          this.isSwinging = true;
+          this.swingProgress = 0.01;
+          this.performMeleeOrGather(item.damage || item.power || 28, onToast, onZombieKilled);
+          return;
+        }
+
+        // Single-tap actions below (never trigger repeatedly while holding)
+        if (isContinuousHold) return;
+
+        // 3. Consumable (Bandage, Medkit, Water, Food)
+        if (item.type === 'consumable') {
+          this.useOrEquipItemById(item.id, onToast);
+          return;
+        }
+
+        // 4. Base Building Placement
+        if (item.type === 'building') {
           const placePos = this.getBuildPreviewPos();
-          this.world.placePlayerBuilding(placePos, this.yaw, item);
+          this.world.placePlayerBuilding(placePos, this.getSnappedBuildYaw(), item);
           this.removeItem(item.id, 1);
+          this.sfx.playImpact(180);
           onToast(`🧱 ${item.name} баригдлаа!`);
-        } else if (item.type === 'consumable') {
-          this.hp = Math.min(this.maxHp, this.hp + (item.hp || 0));
-          this.hunger = Math.min(100, Math.max(0, this.hunger + (item.hunger || 0)));
-          this.thirst = Math.min(100, Math.max(0, this.thirst + (item.thirst || 0)));
-          this.removeItem(item.id, 1);
-          onToast(`✨ ${item.name} хэрэглэлээ!`);
         }
       }
 
-      fireBullet(damage, onToast, onZombieKilled) {
+      fireBullet(damage, onZombieKilled) {
         this.raycaster.setFromCamera(new THREE.Vector2(0, 0), this.camera);
-        this.raycaster.far = 140;
+        this.raycaster.far = 150;
 
-        // Visual Tracer Line
-        const start = this.camera.position.clone().add(new THREE.Vector3(0, -0.1, 0));
+        const start = this.camera.position.clone().add(new THREE.Vector3(0, -0.08, 0));
         const dir = new THREE.Vector3();
         this.camera.getWorldDirection(dir);
-        const end = start.clone().addScaledVector(dir, 60);
+        const end = start.clone().addScaledVector(dir, 70);
 
         const hitboxes = this.zombieMgr.zombies.map((z) => z.hitbox);
         const hits = this.raycaster.intersectObjects(hitboxes, false);
@@ -1810,6 +2246,10 @@
           end.copy(hits[0].point);
           const zObj = this.zombieMgr.zombies.find((z) => z.hitbox === hits[0].object);
           if (zObj) {
+            const ch = document.getElementById('crosshair');
+            ch.classList.add('hit');
+            setTimeout(() => ch.classList.remove('hit'), 110);
+
             const killed = this.zombieMgr.damageZombie(zObj, damage);
             if (killed) onZombieKilled(zObj);
           }
@@ -1818,36 +2258,49 @@
         const lineGeo = new THREE.BufferGeometry().setFromPoints([start, end]);
         const line = new THREE.Line(lineGeo, new THREE.LineBasicMaterial({ color: 0xfef08a }));
         this.scene.add(line);
-        this.tracers.push({ mesh: line, life: 0.08 });
+        this.tracers.push({ mesh: line, life: 0.07 });
       }
 
       performMeleeOrGather(power, onToast, onZombieKilled) {
         this.raycaster.setFromCamera(new THREE.Vector2(0, 0), this.camera);
-        this.raycaster.far = 4.0;
+        this.raycaster.far = 4.2;
 
-        // 1. Check Zombie Hit
+        // 1. Hit Zombie
         const zHits = this.raycaster.intersectObjects(this.zombieMgr.zombies.map((z) => z.hitbox), false);
         if (zHits.length > 0) {
           const zObj = this.zombieMgr.zombies.find((z) => z.hitbox === zHits[0].object);
           if (zObj) {
+            this.sfx.playImpact(110);
             const killed = this.zombieMgr.damageZombie(zObj, power);
             if (killed) onZombieKilled(zObj);
             return;
           }
         }
 
-        // 2. Check Resource Gather (Tree / Stone / Ore)
+        // 2. Smash Rust Barrel / Crate directly with Hatchet/Crowbar
+        const unopened = this.world.lootCrates.filter((c) => !c.opened);
+        const cHits = this.raycaster.intersectObjects(unopened.map((c) => c.mesh), false);
+        if (cHits.length > 0) {
+          const crate = unopened.find((c) => c.mesh === cHits[0].object);
+          if (crate) {
+            this.openCrateOrBarrel(crate, onToast);
+            return;
+          }
+        }
+
+        // 3. Gather Wood / Stone / Ore
         const activeG = this.world.gatherables.filter((g) => g.hp > 0);
         const gHits = this.raycaster.intersectObjects(activeG.map((g) => g.hitTarget), false);
         if (gHits.length > 0) {
           const res = activeG.find((g) => g.hitTarget === gHits[0].object);
           if (res) {
             res.hp -= power;
-            this.world.spawnBurst(res.pos, 0xfbbf24);
+            this.sfx.playImpact(res.type === 'wood' ? 140 : 420);
+            this.world.spawnBurst(res.pos, res.type === 'wood' ? 0xb45309 : 0x38bdf8);
             if (res.hp <= 0) {
               res.mesh.visible = false;
               res.collider.disabled = true;
-              const yieldQty = 3 + Math.floor(Math.random() * 4);
+              const yieldQty = 4 + Math.floor(Math.random() * 4);
               this.addItem(res.type, yieldQty);
               onToast(`+${yieldQty} ${res.label}`);
             } else {
@@ -1857,25 +2310,35 @@
         }
       }
 
+      openCrateOrBarrel(crate, onToast) {
+        crate.opened = true;
+        this.sfx.playImpact(260);
+        this.world.spawnBurst(crate.pos, 0xf59e0b);
+        if (!crate.isCrate) {
+          // Rust barrels smash apart when opened
+          crate.mesh.visible = false;
+        } else {
+          crate.mesh.material = new THREE.MeshStandardMaterial({ color: 0x334155 });
+        }
+
+        const pool = [
+          'scrap_metal', 'cloth', 'gunpowder', 'iron_ingot', 'steel_ingot',
+          'chemical', 'ammo_9mm', 'ammo_556', 'ammo_762', 'bandage', 'medkit',
+          'gun_smg_1', 'gun_shotgun_1', 'gun_sniper_0', 'melee_steel_ingot_4'
+        ];
+        for (let i = 0; i < 3; i++) {
+          const pick = pool[Math.floor(Math.random() * pool.length)];
+          const qty = pick.startsWith('ammo_') ? 18 : 2;
+          this.addItem(pick, qty);
+          const def = GameCatalog.items[pick];
+          if (def) onToast(`📦 Олдлоо: +${qty} ${def.name}`);
+        }
+      }
+
       tryLootNearby(onToast) {
         for (const crate of this.world.lootCrates) {
-          if (!crate.opened && crate.pos.distanceTo(this.pos) < 3.6) {
-            crate.opened = true;
-            crate.mesh.material = new THREE.MeshStandardMaterial({ color: 0x334155 });
-
-            // Roll 3 random loot drops
-            const lootPool = [
-              'scrap_metal', 'cloth', 'gunpowder', 'iron_ingot', 'steel_ingot',
-              'chemical', 'ammo_9mm', 'ammo_556', 'ammo_12g', 'bandage', 'medkit',
-              'gun_smg_1', 'gun_shotgun_1', 'gun_ar_2', 'melee_steel_ingot_4'
-            ];
-            for (let i = 0; i < 3; i++) {
-              const pick = lootPool[Math.floor(Math.random() * lootPool.length)];
-              const qty = pick.startsWith('ammo_') ? 15 : 2;
-              this.addItem(pick, qty);
-              const def = GameCatalog.items[pick];
-              if (def) onToast(`📦 Олдлоо: +${qty} ${def.name}`);
-            }
+          if (!crate.opened && crate.pos.distanceTo(this.pos) < 3.8) {
+            this.openCrateOrBarrel(crate, onToast);
             return true;
           }
         }
@@ -1887,18 +2350,27 @@
         return this.pos.clone().addScaledVector(fwd, 3.6);
       }
 
-      update(dt, input) {
-        if (this.fireCooldown > 0) this.fireCooldown -= dt;
-        this.heldAnchor.position.z += (-0.46 - this.heldAnchor.position.z) * Math.min(1, dt * 15);
+      getSnappedBuildYaw() {
+        return Math.round(this.yaw / (Math.PI / 2)) * (Math.PI / 2) + this.buildYawOffset;
+      }
 
-        if (this.swingTimer > 0) {
-          this.swingTimer -= dt;
-          this.heldAnchor.rotation.x = -Math.sin((this.swingTimer / 0.28) * Math.PI) * 1.2;
-        } else {
-          this.heldAnchor.rotation.x = 0;
+      update(dt, input, time) {
+        if (this.fireCooldown > 0) this.fireCooldown -= dt;
+
+        if (this.isSwinging) {
+          this.swingProgress += dt * 4.2;
+          if (this.swingProgress >= 1) {
+            this.isSwinging = false;
+            this.swingProgress = 0;
+          }
         }
 
-        // Update tracers
+        // Smooth ADS Camera FOV Zoom
+        const targetFOV = this.isADS ? 42 : 72;
+        this.camera.fov += (targetFOV - this.camera.fov) * Math.min(1, dt * 14);
+        this.camera.updateProjectionMatrix();
+
+        // Update bullet tracers
         for (let i = this.tracers.length - 1; i >= 0; i--) {
           this.tracers[i].life -= dt;
           if (this.tracers[i].life <= 0) {
@@ -1908,19 +2380,19 @@
         }
 
         // Survival Hunger & Thirst gradual drain
-        this.hunger = Math.max(0, this.hunger - dt * 0.12);
-        this.thirst = Math.max(0, this.thirst - dt * 0.16);
+        this.hunger = Math.max(0, this.hunger - dt * 0.1);
+        this.thirst = Math.max(0, this.thirst - dt * 0.14);
         if (this.hunger <= 0 || this.thirst <= 0) {
-          this.hp = Math.max(1, this.hp - dt * 1.2);
+          this.hp = Math.max(1, this.hp - dt * 1.0);
         }
 
         // Camera Look
-        this.yaw -= input.lookX;
-        this.pitch = Math.max(-1.45, Math.min(1.45, this.pitch - input.lookY));
+        const sensMult = this.isADS ? 0.55 : 1.0;
+        this.yaw -= input.lookX * sensMult;
+        this.pitch = Math.max(-1.45, Math.min(1.45, this.pitch - input.lookY * sensMult));
 
         // Movement
-        this.isCrouching = input.crouch;
-        const speed = this.isCrouching ? 2.8 : input.sprint ? 9.5 : 5.6;
+        const speed = input.sprint ? 9.6 : 5.6;
         const fwdX = -Math.sin(this.yaw), fwdZ = -Math.cos(this.yaw);
         const rgtX = Math.cos(this.yaw), rgtZ = -Math.sin(this.yaw);
 
@@ -1936,7 +2408,6 @@
         }
         this.vel.y -= 21.0 * dt;
 
-        // Move & World Bounds (-2000 to +2000)
         this.pos.x = Math.max(-1995, Math.min(1995, this.pos.x + this.vel.x * dt));
         this.resolveHorizontal('x');
 
@@ -1946,12 +2417,14 @@
         this.pos.y += this.vel.y * dt;
         this.resolveVertical();
 
-        const eyeH = this.isCrouching ? 0.92 : 1.62;
-        this.camera.position.set(this.pos.x, this.pos.y + eyeH, this.pos.z);
+        this.camera.position.set(this.pos.x, this.pos.y + 1.62, this.pos.z);
         this.camera.rotation.y = this.yaw;
         this.camera.rotation.x = this.pitch;
 
-        // Update Building Ghost Preview
+        const horizSpeed = Math.hypot(this.vel.x, this.vel.z);
+        this.viewmodel.update(dt, this.isADS, this.swingProgress, horizSpeed, time);
+
+        // Building Hologram Preview
         const eq = this.getEquippedItem();
         if (eq && eq.type === 'building') {
           const p = this.getBuildPreviewPos();
@@ -1961,7 +2434,7 @@
           this.buildGhost.visible = true;
           this.buildGhost.scale.set(eq.w / 3, eq.h / 3, eq.d / 0.4);
           this.buildGhost.position.set(gx, gy + eq.h / 2, gz);
-          this.buildGhost.rotation.y = Math.round(this.yaw / (Math.PI / 2)) * (Math.PI / 2);
+          this.buildGhost.rotation.y = this.getSnappedBuildYaw();
         } else {
           this.buildGhost.visible = false;
         }
@@ -1969,7 +2442,7 @@
 
       resolveHorizontal(axis) {
         const feetY = this.pos.y + 0.18;
-        const headY = this.pos.y + (this.isCrouching ? 1.0 : 1.72);
+        const headY = this.pos.y + 1.72;
         for (const b of this.world.colliders) {
           if (b.disabled || headY <= b.minY || feetY >= b.maxY) continue;
           if (this.pos.x + this.radius > b.minX && this.pos.x - this.radius < b.maxX &&
@@ -2008,15 +2481,16 @@
     }
 
     // =========================================================
-    // 5. TOUCH INPUTS & UI MANAGER (HOTBAR, 520 CRAFTS, BESTIARY)
+    // 8. MAIN ENGINE, PROCEDURAL SKY DOME & UI CONTROLLER
     // =========================================================
     class GameController {
       constructor() {
-        this.scene = new THREE.Scene();
-        this.scene.background = new THREE.Color(0x526675);
-        this.scene.fog = new THREE.FogExp2(0x526675, 0.0075);
+        this.sfx = new SoundFX();
 
-        this.camera = new THREE.PerspectiveCamera(72, window.innerWidth / window.innerHeight, 0.1, 260);
+        this.scene = new THREE.Scene();
+        this.scene.fog = new THREE.FogExp2(0x7d8c94, 0.0068);
+
+        this.camera = new THREE.PerspectiveCamera(72, window.innerWidth / window.innerHeight, 0.1, 280);
         this.camera.rotation.order = 'YXZ';
 
         this.renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
@@ -2024,27 +2498,23 @@
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         this.renderer.shadowMap.enabled = true;
         this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        this.renderer.toneMappingExposure = 1.08;
         document.getElementById('game-container').appendChild(this.renderer.domElement);
 
-        this.hemi = new THREE.HemisphereLight(0xcbd5e1, 0x334155, 0.95);
-        this.sun = new THREE.DirectionalLight(0xfff1d6, 1.5);
-        this.sun.castShadow = true;
-        this.sun.shadow.mapSize.set(1024, 1024);
-        const d = 55;
-        this.sun.shadow.camera.left = -d; this.sun.shadow.camera.right = d;
-        this.sun.shadow.camera.top = d; this.sun.shadow.camera.bottom = -d;
-        this.scene.add(this.hemi, this.sun, this.sun.target);
+        this.setupRealisticAtmosphere();
 
         this.world = new ChunkWorld(this.scene);
         this.zombieMgr = new ZombieManager(this.scene, this.world);
-        this.player = new PlayerSystem(this.camera, this.scene, this.world, this.zombieMgr);
+        this.player = new PlayerSystem(this.camera, this.scene, this.world, this.zombieMgr, this.sfx);
 
-        this.input = { moveX: 0, moveY: 0, lookX: 0, lookY: 0, jump: false, crouch: false, sprint: false };
+        this.input = { moveX: 0, moveY: 0, lookX: 0, lookY: 0, jump: false, sprint: false };
+        this.isHoldingUse = false;
         this.joyId = null;
         this.lookId = null;
         this.lastLook = { x: 0, y: 0 };
 
-        this.activeModalTab = 'craft';
+        this.activeModalTab = 'inv';
         this.craftCategory = 'ALL';
         this.craftSearch = '';
 
@@ -2058,10 +2528,59 @@
         });
 
         this.clock = new THREE.Clock();
+        this.elapsed = 0;
         this.fpsFrames = 0;
         this.fpsTime = 0;
         this.loop = this.loop.bind(this);
         requestAnimationFrame(this.loop);
+      }
+
+      setupRealisticAtmosphere() {
+        // Procedural Sky Dome with Horizon Glow & Sun Disc
+        const skyGeo = new THREE.SphereGeometry(240, 24, 16);
+        const skyMat = new THREE.ShaderMaterial({
+          side: THREE.BackSide,
+          depthWrite: false,
+          uniforms: {
+            topColor: { value: new THREE.Color(0x2c4b66) },
+            horizonColor: { value: new THREE.Color(0x9aa7ad) },
+            sunDir: { value: new THREE.Vector3(0.5, 0.55, 0.4).normalize() }
+          },
+          vertexShader: `
+            varying vec3 vWorldPos;
+            void main() {
+              vec4 wp = modelMatrix * vec4(position, 1.0);
+              vWorldPos = wp.xyz;
+              gl_Position = projectionMatrix * viewMatrix * wp;
+            }
+          `,
+          fragmentShader: `
+            uniform vec3 topColor;
+            uniform vec3 horizonColor;
+            uniform vec3 sunDir;
+            varying vec3 vWorldPos;
+            void main() {
+              vec3 dir = normalize(vWorldPos);
+              float h = clamp(dir.y, 0.0, 1.0);
+              vec3 col = mix(horizonColor, topColor, pow(h, 0.55));
+              float sunAmt = max(dot(dir, sunDir), 0.0);
+              col += vec3(1.0, 0.85, 0.6) * pow(sunAmt, 48.0) * 0.9;
+              gl_FragColor = vec4(col, 1.0);
+            }
+          `
+        });
+        this.skyDome = new THREE.Mesh(skyGeo, skyMat);
+        this.scene.add(this.skyDome);
+
+        this.hemi = new THREE.HemisphereLight(0xdbeafe, 0x3f3a32, 0.95);
+        this.sun = new THREE.DirectionalLight(0xfff0d4, 1.65);
+        this.sun.castShadow = true;
+        this.sun.shadow.mapSize.set(1024, 1024);
+        const d = 55;
+        this.sun.shadow.camera.left = -d; this.sun.shadow.camera.right = d;
+        this.sun.shadow.camera.top = d; this.sun.shadow.camera.bottom = -d;
+        this.sun.shadow.bias = -0.0005;
+        this.scene.add(this.hemi, this.sun, this.sun.target);
       }
 
       showToast(msg) {
@@ -2071,7 +2590,7 @@
         el.textContent = msg;
         box.appendChild(el);
         if (box.children.length > 4) box.firstChild.remove();
-        setTimeout(() => el.remove(), 1100);
+        setTimeout(() => el.remove(), 1150);
       }
 
       bindControls() {
@@ -2082,6 +2601,7 @@
 
         joyZone.addEventListener('touchstart', (e) => {
           e.preventDefault();
+          this.sfx.unlock();
           if (this.joyId !== null) return;
           const t = e.changedTouches[0];
           this.joyId = t.identifier;
@@ -2110,6 +2630,7 @@
 
         lookZone.addEventListener('touchstart', (e) => {
           e.preventDefault();
+          this.sfx.unlock();
           if (this.lookId !== null) return;
           const t = e.changedTouches[0];
           this.lookId = t.identifier;
@@ -2135,18 +2656,65 @@
         lookZone.addEventListener('touchend', endLook);
         lookZone.addEventListener('touchcancel', endLook);
 
+        // Reliable Single-Fire Tap Helper (Prevents Touch+Click double trigger)
         const tap = (id, fn) => {
           const el = document.getElementById(id);
-          el.addEventListener('touchstart', (e) => { e.preventDefault(); e.stopPropagation(); fn(el); }, { passive: false });
-          el.addEventListener('click', (e) => { e.stopPropagation(); fn(el); });
+          let lastTouch = 0;
+          el.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            lastTouch = Date.now();
+            this.sfx.unlock();
+            fn(el);
+          }, { passive: false });
+          el.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (Date.now() - lastTouch < 400) return;
+            this.sfx.unlock();
+            fn(el);
+          });
         };
 
-        tap('btn-use', () => {
-          this.player.useEquipped(
+        // Main Action / Fire / Use Button (Supports both Tap and Continuous Hold!)
+        const btnUse = document.getElementById('btn-use');
+        let lastUseTouch = 0;
+        const startUse = (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          this.sfx.unlock();
+          this.isHoldingUse = true;
+          this.player.useActiveItem(
+            false,
             (m) => this.showToast(m),
             (z) => this.handleZombieKilled(z)
           );
           this.renderHotbar();
+        };
+        const stopUse = (e) => {
+          if (e) e.stopPropagation();
+          this.isHoldingUse = false;
+        };
+
+        btnUse.addEventListener('touchstart', (e) => { lastUseTouch = Date.now(); startUse(e); }, { passive: false });
+        btnUse.addEventListener('touchend', stopUse);
+        btnUse.addEventListener('touchcancel', stopUse);
+        btnUse.addEventListener('mousedown', (e) => { if (Date.now() - lastUseTouch > 400) startUse(e); });
+        btnUse.addEventListener('mouseup', stopUse);
+        btnUse.addEventListener('mouseleave', stopUse);
+
+        // ADS Scope Zoom / Rotate Building Button
+        tap('btn-ads', (el) => {
+          const eq = this.player.getEquippedItem();
+          if (eq && eq.type === 'building') {
+            this.player.buildYawOffset += Math.PI / 2;
+            this.showToast('🔄 Барилгыг 90° эргүүллээ');
+          } else if (eq && eq.type === 'gun') {
+            this.player.isADS = !this.player.isADS;
+            el.classList.toggle('active', this.player.isADS);
+            document.getElementById('crosshair').classList.toggle('ads', this.player.isADS);
+          } else {
+            this.showToast('🎯 Дуран зөвхөн буун дээр ажиллана');
+          }
         });
 
         tap('btn-reload', () => this.player.reloadGun((m) => this.showToast(m)));
@@ -2155,15 +2723,11 @@
           if (this.player.tryLootNearby((m) => this.showToast(m))) {
             this.renderHotbar();
           } else {
-            this.showToast('Ойр хавьд Loot хайрцаг алга');
+            this.showToast('📦 Ойр хавьд Rust торх/хайрцаг алга');
           }
         });
 
         tap('btn-jump', () => { this.input.jump = true; });
-        tap('btn-crouch', (el) => {
-          this.input.crouch = !this.input.crouch;
-          el.classList.toggle('active', this.input.crouch);
-        });
         tap('btn-sprint', (el) => {
           this.input.sprint = !this.input.sprint;
           el.classList.toggle('active', this.input.sprint);
@@ -2177,8 +2741,8 @@
           else document.exitFullscreen().catch(() => {});
         });
 
-        // Open / Close Bag & 520-Craft Modal
         tap('btn-open-bag', () => {
+          this.isHoldingUse = false;
           document.getElementById('modal-overlay').classList.add('open');
           this.renderModal();
         });
@@ -2202,10 +2766,10 @@
         let dx = tx - (r.left + r.width / 2);
         let dy = ty - (r.top + r.height / 2);
         const dist = Math.hypot(dx, dy);
-        if (dist > 42) { dx = (dx / dist) * 42; dy = (dy / dist) * 42; }
+        if (dist > 40) { dx = (dx / dist) * 40; dy = (dy / dist) * 40; }
         stick.style.transform = `translate(${dx}px, ${dy}px)`;
-        this.input.moveX = Math.abs(dx / 42) < 0.12 ? 0 : dx / 42;
-        this.input.moveY = Math.abs(dy / 42) < 0.12 ? 0 : dy / 42;
+        this.input.moveX = Math.abs(dx / 40) < 0.12 ? 0 : dx / 40;
+        this.input.moveY = Math.abs(dy / 40) < 0.12 ? 0 : dy / 40;
       }
 
       handleZombieKilled(z) {
@@ -2241,22 +2805,108 @@
             slot.innerHTML = `<span style="color:#475569;font-size:10px;">${i + 1}</span>`;
           }
 
+          let lastSlotTouch = 0;
           const selectSlot = (e) => {
             e.preventDefault();
             e.stopPropagation();
             this.player.selectedSlot = i;
-            this.player.refreshHeldModel();
+            this.player.refreshEquipped();
             this.renderHotbar();
           };
-          slot.addEventListener('touchstart', selectSlot, { passive: false });
-          slot.addEventListener('click', selectSlot);
+          slot.addEventListener('touchstart', (e) => { lastSlotTouch = Date.now(); selectSlot(e); }, { passive: false });
+          slot.addEventListener('click', (e) => { if (Date.now() - lastSlotTouch > 400) selectSlot(e); });
           bar.appendChild(slot);
+        }
+
+        // Update Main Action Button & Banner dynamically for Equipped Item
+        const eq = this.player.getEquippedItem();
+        const btnUse = document.getElementById('btn-use');
+        const btnAds = document.getElementById('btn-ads');
+        const banner = document.getElementById('held-info-banner');
+
+        if (!eq) {
+          btnUse.innerHTML = '👊<br/>ЦОХИХ';
+          btnUse.style.background = 'rgba(71, 85, 105, 0.85)';
+          btnAds.innerHTML = '🎯<br/>ДУРАН';
+          banner.textContent = 'Гарт: Хоосон гар';
+        } else if (eq.type === 'gun') {
+          btnUse.innerHTML = '🔫<br/>БУУДАХ';
+          btnUse.style.background = 'rgba(220, 38, 38, 0.9)';
+          btnAds.innerHTML = '🎯<br/>ДУРАН';
+          const mag = this.player.magAmmo[eq.id] ?? eq.magSize;
+          const res = this.player.inventory[eq.ammoType] || 0;
+          banner.textContent = `${eq.name} | Сум: ${mag} / ${res}`;
+        } else if (eq.type === 'tool' || eq.type === 'melee') {
+          btnUse.innerHTML = '🪓<br/>ЦАВЧИХ';
+          btnUse.style.background = 'rgba(217, 119, 6, 0.9)';
+          btnAds.innerHTML = '🎯<br/>ДУРАН';
+          banner.textContent = `${eq.name} | Хүч: ${eq.damage || eq.power}`;
+        } else if (eq.type === 'consumable') {
+          btnUse.innerHTML = '🩹<br/>ХЭРЭГЛЭХ';
+          btnUse.style.background = 'rgba(22, 163, 74, 0.92)';
+          banner.textContent = `${eq.name} (${eq.desc})`;
+        } else if (eq.type === 'building') {
+          btnUse.innerHTML = '🧱<br/>БАРИХ';
+          btnUse.style.background = 'rgba(2, 132, 199, 0.92)';
+          btnAds.innerHTML = '🔄<br/>ЭРГҮҮЛ';
+          banner.textContent = `Барих: ${eq.name} [БАРИХ дарна уу]`;
         }
       }
 
       renderModal() {
         const container = document.getElementById('modal-content');
-        if (this.activeModalTab === 'craft') {
+        if (this.activeModalTab === 'inv') {
+          let html = `<div class="grid-list">`;
+          const entries = Object.entries(this.player.inventory).filter(([, q]) => q > 0);
+          if (entries.length === 0) html += `<p>Цүнх хоосон байна.</p>`;
+
+          for (const [id, qty] of entries) {
+            const it = GameCatalog.items[id];
+            if (!it) continue;
+
+            let actionButtons = '';
+            if (it.type === 'consumable') {
+              actionButtons = `
+                <button class="card-btn use-now" data-use="${id}">✨ ХЭРЭГЛЭХ</button>
+                <button class="card-btn equip" data-equip="${id}">✋ ГАРТ БАРИХ</button>
+              `;
+            } else if (it.type === 'armor') {
+              actionButtons = `<button class="card-btn use-now" data-use="${id}">🦺 ӨМСӨХ</button>`;
+            } else if (['gun', 'melee', 'tool', 'building'].includes(it.type)) {
+              actionButtons = `<button class="card-btn equip" data-equip="${id}">✋ ГАРТ БАРИХ</button>`;
+            }
+
+            html += `
+              <div class="card">
+                <div class="card-info">
+                  <div class="card-title">${it.icon} ${it.name} (x${qty})</div>
+                  <div class="card-sub">${it.desc || ''}</div>
+                </div>
+                <div class="card-actions">${actionButtons}</div>
+              </div>
+            `;
+          }
+          html += `</div>`;
+          container.innerHTML = html;
+
+          container.querySelectorAll('[data-use]').forEach((btn) => {
+            btn.addEventListener('click', () => {
+              this.player.useOrEquipItemById(btn.dataset.use, (m) => this.showToast(m));
+              this.renderModal();
+              this.renderHotbar();
+            });
+          });
+
+          container.querySelectorAll('[data-equip]').forEach((btn) => {
+            btn.addEventListener('click', () => {
+              const id = btn.dataset.equip;
+              this.player.hotbar[this.player.selectedSlot] = id;
+              this.player.refreshEquipped();
+              this.renderHotbar();
+              this.showToast(`✋ Гарт барилаа: ${GameCatalog.items[id].name}`);
+            });
+          });
+        } else if (this.activeModalTab === 'craft') {
           const cats = ['ALL', 'Weapon', 'Ammo', 'Building', 'Armor', 'Survival', 'Tool', 'Material'];
           const catNames = { ALL: 'Бүгд (520)', Weapon: 'Зэвсэг', Ammo: 'Сум', Building: 'Барилга', Armor: 'Хуяг', Survival: 'Эм/Хоол', Tool: 'Багаж', Material: 'Материал' };
 
@@ -2271,7 +2921,6 @@
             return true;
           });
 
-          // Render up to 120 matching cards smoothly for mobile scroll performance
           for (const rec of filtered.slice(0, 120)) {
             const reqEntries = Object.entries(rec.reqs);
             const canCraft = reqEntries.every(([rid, amt]) => (this.player.inventory[rid] || 0) >= amt);
@@ -2294,9 +2943,6 @@
             `;
           }
           html += `</div>`;
-          if (filtered.length > 120) {
-            html += `<p style="text-align:center;color:#94a3b8;font-size:11px;margin-top:8px;">Нийт ${filtered.length} жор олдлоо. Хайлт эсвэл ангилал ашиглаж шүүнэ үү.</p>`;
-          }
           container.innerHTML = html;
 
           const searchInput = document.getElementById('craft-search');
@@ -2328,39 +2974,10 @@
                 this.player.removeItem(rid, amt);
               }
               this.player.addItem(rec.id, rec.outQty);
+              this.sfx.playUseItem();
               this.showToast(`🔨 Урлалаа: ${rec.name}`);
               this.renderModal();
               this.renderHotbar();
-            });
-          });
-        } else if (this.activeModalTab === 'inv') {
-          let html = `<div class="grid-list">`;
-          const entries = Object.entries(this.player.inventory);
-          if (entries.length === 0) html += `<p>Цүнх хоосон байна.</p>`;
-          for (const [id, qty] of entries) {
-            const it = GameCatalog.items[id];
-            if (!it) continue;
-            const equippable = ['gun', 'melee', 'tool', 'building', 'consumable'].includes(it.type);
-            html += `
-              <div class="card">
-                <div class="card-info">
-                  <div class="card-title">${it.icon} ${it.name} (x${qty})</div>
-                  <div class="card-sub">${it.desc || ''}</div>
-                </div>
-                ${equippable ? `<button class="card-btn equip" data-equip="${id}">ГАРТ БАРИХ</button>` : ''}
-              </div>
-            `;
-          }
-          html += `</div>`;
-          container.innerHTML = html;
-
-          container.querySelectorAll('[data-equip]').forEach((btn) => {
-            btn.addEventListener('click', () => {
-              const id = btn.dataset.equip;
-              this.player.hotbar[this.player.selectedSlot] = id;
-              this.player.refreshHeldModel();
-              this.renderHotbar();
-              this.showToast(`✋ Гарт барилаа: ${GameCatalog.items[id].name}`);
             });
           });
         } else if (this.activeModalTab === 'zombies') {
@@ -2368,7 +2985,7 @@
           for (const b of GameCatalog.bossTypes) {
             html += `<div class="card" style="border-color:#dc2626;"><div class="card-info"><div class="card-title" style="color:#fca5a5;">${b.name}</div><div class="card-sub">HP: ${b.hp} | Хурд: ${b.speed} | Цохилт: ${b.dmg}</div></div></div>`;
           }
-          html += `</div><h4 style="color:#34d399;margin-bottom:6px;">🧟 20 ТӨРЛИЙН ЭНГИЙН ЗОМБИ</h4><div class="grid-list">`;
+          html += `</div><h4 style="color:#84cc16;margin-bottom:6px;">🧟 20 ТӨРЛИЙН ЭНГИЙН ЗОМБИ</h4><div class="grid-list">`;
           for (const z of GameCatalog.zombieTypes) {
             html += `<div class="card"><div class="card-info"><div class="card-title">${z.name}</div><div class="card-sub">HP: ${z.hp} | Хурд: ${z.speed} | Цохилт: ${z.dmg}</div></div></div>`;
           }
@@ -2380,31 +2997,41 @@
       loop() {
         requestAnimationFrame(this.loop);
         const dt = Math.min(this.clock.getDelta(), 0.05);
+        this.elapsed += dt;
 
-        // Stream 4000x4000 world chunks around player
+        // Continuous automatic firing or continuous chopping/mining while button is held
+        if (this.isHoldingUse) {
+          this.player.useActiveItem(
+            true,
+            (m) => this.showToast(m),
+            (z) => this.handleZombieKilled(z)
+          );
+          this.renderHotbar();
+        }
+
         this.world.updateChunks(this.player.pos);
-
-        // Update player physics
-        this.player.update(dt, this.input);
+        this.player.update(dt, this.input, this.elapsed);
         this.input.lookX = 0;
         this.input.lookY = 0;
         this.input.jump = false;
 
-        // Center directional sun shadow around player
-        this.sun.position.set(this.player.pos.x + 40, 65, this.player.pos.z + 30);
+        this.skyDome.position.copy(this.player.pos);
+        this.sun.position.set(this.player.pos.x + 45, 70, this.player.pos.z + 35);
         this.sun.target.position.copy(this.player.pos);
 
-        // Update 20 Zombie types & 20 Boss types
         this.zombieMgr.update(
           dt,
           this.player.pos,
           (dmg, zName) => {
-            const finalDmg = Math.max(2, dmg - Math.floor(this.player.armor * 0.2));
+            const finalDmg = Math.max(2, dmg - Math.floor(this.player.armor * 0.25));
             this.player.hp -= finalDmg;
+            const vig = document.getElementById('damage-vignette');
+            vig.style.opacity = '1';
+            setTimeout(() => { vig.style.opacity = '0'; }, 240);
             this.showToast(`💥 ${zName} цохилоо (-${finalDmg} HP)`);
+
             if (this.player.hp <= 0) {
-              // Respawn at Safe Zone
-              this.player.hp = 100;
+              this.player.hp = this.player.maxHp;
               this.player.hunger = 100;
               this.player.thirst = 100;
               this.player.pos.set(0, 0, 5);
@@ -2420,26 +3047,15 @@
       }
 
       updateHUD(dt) {
-        document.getElementById('hp-fill').style.width = `${(this.player.hp / this.player.maxHp) * 100}%`;
+        document.getElementById('hp-fill').style.width = `${Math.min(100, (this.player.hp / this.player.maxHp) * 100)}%`;
         document.getElementById('hp-text').textContent = Math.ceil(this.player.hp);
-        document.getElementById('hunger-fill').style.width = `${this.player.hunger}%`;
-        document.getElementById('hunger-text').textContent = Math.ceil(this.player.hunger);
         document.getElementById('thirst-fill').style.width = `${this.player.thirst}%`;
         document.getElementById('thirst-text').textContent = Math.ceil(this.player.thirst);
+        document.getElementById('hunger-fill').style.width = `${this.player.hunger}%`;
+        document.getElementById('hunger-text').textContent = Math.ceil(this.player.hunger);
+        document.getElementById('armor-fill').style.width = `${this.player.armor}%`;
+        document.getElementById('armor-text').textContent = this.player.armor;
 
-        // Ammo HUD for equipped gun
-        const eq = this.player.getEquippedItem();
-        const ammoHud = document.getElementById('ammo-hud');
-        if (eq && eq.type === 'gun') {
-          const mag = this.player.magAmmo[eq.id] ?? eq.magSize;
-          const res = this.player.inventory[eq.ammoType] || 0;
-          ammoHud.style.display = 'block';
-          ammoHud.textContent = `СУМ: ${mag} / ${res}`;
-        } else {
-          ammoHud.style.display = 'none';
-        }
-
-        // Boss Health Bar if a Boss Zombie is active
         const activeBoss = this.zombieMgr.zombies.find((z) => z.isBoss);
         const bossWrap = document.getElementById('boss-bar-wrap');
         if (activeBoss) {
@@ -2450,12 +3066,11 @@
           bossWrap.style.display = 'none';
         }
 
-        // Check Loot Crate proximity prompt
-        const nearCrate = this.world.lootCrates.find((c) => !c.opened && c.pos.distanceTo(this.player.pos) < 3.6);
+        const nearCrate = this.world.lootCrates.find((c) => !c.opened && c.pos.distanceTo(this.player.pos) < 3.8);
         const promptEl = document.getElementById('target-prompt');
         if (nearCrate) {
           promptEl.style.display = 'block';
-          promptEl.textContent = '📦 Санамсаргүй Loot Хайрцаг [LOOT дарна уу]';
+          promptEl.textContent = nearCrate.isCrate ? '📦 Цэргийн Loot Хайрцаг [LOOT дарна уу]' : '🛢️ Rust Торх [LOOT эсвэл Сүхээр цохино уу]';
         } else {
           promptEl.style.display = 'none';
         }
@@ -2469,8 +3084,7 @@
           const px = Math.round(this.player.pos.x);
           const pz = Math.round(this.player.pos.z);
           document.getElementById('zone-label').textContent = this.world.getBiomeAt(px, pz);
-          document.getElementById('coord-label').textContent = `X:${px} Z:${pz}`;
-          document.getElementById('fps-label').textContent = `${fps} FPS`;
+          document.getElementById('coord-label').textContent = `X: ${px} | Z: ${pz} | ${fps} FPS`;
         }
       }
     }
